@@ -1,0 +1,265 @@
+{
+  "info": {
+    "name": "SugarMill API",
+    "description": "API collection for SugarMill application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"name\": \"Test User\",\n  \"role\": \"LABOURER\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"testUser\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contractor",
+      "item": [
+        {
+          "name": "Create Contractor",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Contractor Name\",\n  \"experience\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/contractors",
+              "host": ["{{baseUrl}}"],
+              "path": ["contractors"]
+            }
+          }
+        },
+        {
+          "name": "Get Contractor By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/contractors/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["contractors", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Get All Contractors",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/contractors",
+              "host": ["{{baseUrl}}"],
+              "path": ["contractors"]
+            }
+          }
+        },
+        {
+          "name": "Update Contractor",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"experience\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/contractors/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["contractors", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Delete Contractor",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/contractors/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["contractors", ":id"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Labour",
+      "item": [
+        {
+          "name": "Create Labour",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Labour Name\",\n  \"experience\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/labour",
+              "host": ["{{baseUrl}}"],
+              "path": ["labour"]
+            }
+          }
+        },
+        {
+          "name": "Get Labour By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/labour/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["labour", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Get All Labour",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/labour",
+              "host": ["{{baseUrl}}"],
+              "path": ["labour"]
+            }
+          }
+        },
+        {
+          "name": "Update Labour",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"experience\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/labour/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["labour", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Delete Labour",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/labour/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["labour", ":id"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mill",
+      "item": [
+        {
+          "name": "Create Mill",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mill Name\",\n  \"location\": \"Location\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mill",
+              "host": ["{{baseUrl}}"],
+              "path": ["mill"]
+            }
+          }
+        },
+        {
+          "name": "Get Mill By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mill/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["mill", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Get All Mills",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mill",
+              "host": ["{{baseUrl}}"],
+              "path": ["mill"]
+            }
+          }
+        },
+        {
+          "name": "Update Mill",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"location\": \"New Location\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/mill/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["mill", ":id"]
+            }
+          }
+        },
+        {
+          "name": "Delete Mill",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/mill/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["mill", ":id"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

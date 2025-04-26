@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import logger from '@/utils/logger.js';
-import { getUserById, getAllUsers } from  '@/repositories/user.repository.js'; // Adjust the import path as necessary
+import logger from '../utils/logger.js';
+import { getUser, getAllUsers } from  '../repositories/user.repository.js'; // Adjust the import path as necessary
 
 export class UserController {
     // Get all users
@@ -18,7 +18,7 @@ export class UserController {
     async getUserById(req: Request, res: Response): Promise<Response> {
         try {
             const { id } = req.params;
-            const user = await getUserById(id);
+            const user = await getUser({_id:id});
 
             if (!user) {
                 return res.status(404).json({ message: 'User not found' });

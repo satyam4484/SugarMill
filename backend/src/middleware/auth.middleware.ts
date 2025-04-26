@@ -1,28 +1,32 @@
 import { Request, Response, NextFunction } from 'express';
-import logger from '@/utils/logger.js';
+import jwt from 'jsonwebtoken';
+import { ERROR_MESSAGES } from '../utils/constants.js';
+import config from '../utils/config.js';
+import User from '../models/user.model.js';
 
-const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization;
+export interface AuthRequest extends Request {
+    user?: any;
+}
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ message: 'Unauthorized' });
-    }
-
-    const token = authHeader.split(' ')[1];
-
+export const authenticateToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-        // TODO: Replace with actual token verification logic
-        if (token !== 'demo-token') {
-            throw new Error('Invalid token');
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1];
+
+        if (!token) {
+            return res.status(401).json({ message: ERROR_MESSAGES.UNAUTHORIZED });
         }
 
-        // Add user information to the request object if needed
-        (req as any).user = { id: '123', name: 'Demo User' }; // Assign user information
+        const decoded = jwt.verify(token, config.JWT_SECRET) as any;
+        const user = await User.findById(decoded.userId);
 
+        if (!user) {
+            return res.status(401).json({ message: ERROR_MESSAGES.USER_NOT_FOUND });
+        }
+
+        req.user = user;
         next();
     } catch (error) {
-        return res.status(401).json({ message: 'Unauthorized' });
+        return res.status(401).json({ message: ERROR_MESSAGES.INVALID_TOKEN });
     }
 };
-
-export default authMiddleware;

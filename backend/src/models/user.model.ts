@@ -1,24 +1,66 @@
-import { Schema, model, Document } from 'mongoose';
+import mongoose, { Schema, Document } from 'mongoose';
+import { UserRole } from '../utils/constants.js';
+import bcrypt from 'bcrypt';
 
-export interface UserType extends Document {
+export interface IUser extends Document {
+    userId: string;
     name: string;
     email: string;
-    password: string;
-    createdAt: Date;
-    updatedAt: Date;
+    passwordHash: string;
+    role: UserRole;
+    isVerified: boolean;
+    comparePassword(password: string): Promise<boolean>;
 }
 
-const UserSchema = new Schema<UserType>(
-    {
-        name: { type: String, required: true },
-        email: { type: String, required: true, unique: true },
-        password: { type: String, required: true },
+const userSchema = new Schema({
+    userId: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true
     },
-    {
-        timestamps: true, // Automatically adds createdAt and updatedAt fields
+    name: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+        lowercase: true
+    },
+    passwordHash: {
+        type: String,
+        required: true
+    },
+    role: {
+        type: String,
+        enum: Object.values(UserRole),
+        required: true
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
     }
-);
+}, {
+    timestamps: true
+});
 
-const User = model<UserType>('User', UserSchema);
+userSchema.pre('save', async function(next) {
+    if (!this.isModified('passwordHash')) return next();
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
+        next();
+    } catch (error: any) {
+        next(error);
+    }
+});
 
-export default User;
+userSchema.methods.comparePassword = async function(password: string): Promise<boolean> {
+    return bcrypt.compare(password, this.passwordHash);
+};
+
+export default mongoose.model<IUser>('User', userSchema);

@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import { body } from 'express-validator';
-import * as authController from '../controllers/auth.controller';
-import { validateRequest } from '../middleware/validateRequest';
+import { AuthController } from '../controllers/auth.controller.js';
 
 const router = Router();
+
+router.post('/register', AuthController.register);
+router.post('/login', AuthController.login);
 
 
 export default router;

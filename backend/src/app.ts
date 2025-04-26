@@ -1,25 +1,18 @@
-import express,{Express} from "express";
-import cors from "cors"
-import router from "./routes/index.routes.js";
-import appConfigs from "./utils/config.js";
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import config from './utils/config.js';
+import logger from './utils/logger.js';
+import appRoutes from './routes/index.routes.js';
+// Import routes
+const app = express();
 
-const app:Express = express();
-
-// Middleware to parse JSON bodies
+// Middleware
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.raw());
-app.use(express.text());
 
-
-
-app.use(cors({
-    origin: 'http://localhost:5173', // Specify the frontend origin explicitly
-    credentials: true,
-}))
-
-
-// router tp serve all the routers
-app.use('/api',router);
+// Routes
+app.use('/api',appRoutes)
 
 export default app;
