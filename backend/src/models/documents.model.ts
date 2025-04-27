@@ -3,8 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface IDocument extends Document {
     aadhar: {
         aadharNumber: string;
-        aadharFrontPhoto: string;
-        aadharBackPhoto: string;
+        aadharPhoto: string;
         isAadharVerified: boolean;
     },
     pancard: {
@@ -18,7 +17,6 @@ const aadharSchema = new Schema({
     aadharNumber: {
         type: String,
         required: true,
-        unique: true,
         trim: true,
         validate: {
             validator: function(v: string) {
@@ -27,11 +25,7 @@ const aadharSchema = new Schema({
             message: 'Aadhar number must be 12 digits'
         }
     },
-    aadharFrontPhoto: {
-        type: String,
-        required: true
-    },
-    aadharBackPhoto: {
+    aadharPhoto: {
         type: String,
         required: true
     },
@@ -45,7 +39,6 @@ const pancardSchema = new Schema({
     panNumber: {
         type: String,
         required: true,
-        unique: true,
         trim: true,
         uppercase: true,
         validate: {
@@ -68,14 +61,13 @@ const pancardSchema = new Schema({
 const documentSchema = new Schema({
     aadhar: aadharSchema,
     pancard: pancardSchema,
-    
 }, {
     timestamps: true
 });
 
-// Indexes for faster queries
-documentSchema.index({ 'aadhar.aadharNumber': 1 });
-documentSchema.index({ 'pancard.panNumber': 1 });
+// Define indexes only once using schema.index()
+documentSchema.index({ 'aadhar.aadharNumber': 1 }, { unique: true });
+documentSchema.index({ 'pancard.panNumber': 1 }, { unique: true });
 
 export default mongoose.model<IDocument>('Documents', documentSchema);
 

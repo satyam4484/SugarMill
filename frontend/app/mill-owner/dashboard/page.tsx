@@ -12,6 +12,10 @@ import { AlertTriangle, ArrowUpRight, Calendar, CheckCircle, FileCheck, FileText
 import { LineChart } from "@/components/ui/chart"
 import "chart.js/auto"
 import withAuth from "@/hocs/withAuth"
+import { useEffect, useState } from "react"
+import { contractors } from "@/network/agent"
+import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
 
 function MillOwnerDashboardPage() {
   // Sample data for charts
@@ -27,9 +31,33 @@ function MillOwnerDashboardPage() {
       },
     ],
   }
+  
+  const router =useRouter();
+  const { toast } = useToast()
 
   // Filter contracts for this mill owner (using ID 1 for demo)
   const millOwnerContracts = mockContracts.filter((contract) => contract.millOwnerId === "1")
+
+  const [contractorsData,setContractors] = useState<any[]>([]);
+
+  const getContractorsHanlder = async () => {
+    try{
+      const response = await contractors.getAllContractors('limit=5');
+      setContractors(response.data);
+
+    }catch(error){
+      console.log("error fetching..")
+      toast({
+        title: "Error",
+        description: "Failed to load contractor details. Please try again.",
+        variant: "destructive"
+      })
+    }
+  }
+
+  useEffect(() => {
+    getContractorsHanlder();
+  },[])
 
   return (
     <DashboardLayout role="mill-owner">
@@ -242,7 +270,7 @@ function MillOwnerDashboardPage() {
                     <CardTitle>Active Contracts</CardTitle>
                     <CardDescription>Currently active contracts with contractors</CardDescription>
                   </div>
-                  <Button>
+                  <Button onClick={() => router.push('/mill-owner/contracts/create')}>
                     <Plus className="mr-2 h-4 w-4" />
                     New Contract
                   </Button>
@@ -299,35 +327,52 @@ function MillOwnerDashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {mockContractors.slice(0, 6).map((contractor) => (
-                      <Card key={contractor.id} className="overflow-hidden">
+                    {contractorsData.slice(0, 5).map((contractor) => (
+                      <Card key={contractor._id} className="overflow-hidden">
                         <CardHeader className="p-4">
-                          <CardTitle className="text-base">{contractor.name}</CardTitle>
-                          <CardDescription>{contractor.phone}</CardDescription>
+                          <CardTitle className="text-base">{contractor?.user?.name}</CardTitle>
+                          <CardDescription>{contractor?.user?.contactNo}</CardDescription>
                         </CardHeader>
                         <CardContent className="p-4 pt-0">
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Total Labourers:</span>
-                              <span>{contractor.totalLabourers}</span>
+                              <span>{contractor.totalLabourers || 0}</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Active Contracts:</span>
-                              <span>{contractor.activeContracts}</span>
+                              <span>{contractor.activeContracts || 0}</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Status:</span>
-                              <Badge variant={contractor.status === "active" ? "default" : "destructive"}>
-                                {contractor.status}
+                              <Badge variant={contractor.isActive ? "default" : "destructive"}>
+                                {contractor.isActive ? "Active" : "Inactive"}
                               </Badge>
                             </div>
                           </div>
                         </CardContent>
                         <div className="border-t p-4">
-                          <Button className="w-full">Create Contract</Button>
+                          <Button className="w-full" onClick={() => router.push('/mill-owner/contracts/create')}>Create Contract</Button>
                         </div>
                       </Card>
                     ))}
+                    
+                    {/* See All Contractors Card */}
+                    <Card className="overflow-hidden flex flex-col justify-center items-center bg-muted/30 border-dashed">
+                      <CardContent className="p-6 flex flex-col items-center justify-center h-full">
+                        <Users className="h-12 w-12 text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-medium mb-2">See All Contractors</h3>
+                        <p className="text-sm text-muted-foreground text-center mb-4">
+                          View and manage all your contractors
+                        </p>
+                        <Button 
+                              className="cursor-pointer" 
+                              onClick={() => router.push('/mill-owner/contractors')}
+                            >
+                              View All
+                            </Button>
+                      </CardContent>
+                    </Card>
                   </div>
                 </CardContent>
               </Card>

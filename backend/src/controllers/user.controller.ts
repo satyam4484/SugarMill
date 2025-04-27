@@ -1,33 +1,30 @@
 import { Request, Response } from 'express';
+import * as UserRepository from '../repositories/user.repository.js';
 import logger from '../utils/logger.js';
-import { getUser, getAllUsers } from  '../repositories/user.repository.js'; // Adjust the import path as necessary
 
 export class UserController {
-    // Get all users
-    async getAllUsers(req: Request, res: Response): Promise<Response> {
+    static async checkExistingUser(req: Request, res: Response): Promise<Response> {
         try {
-            const users = await getAllUsers();
-            return res.status(200).json(users);
-        } catch (error) {
-            logger.error('Error fetching users:', error);
-            return res.status(500).json({ message: 'Internal Server Error' });
-        }
-    }
-
-    // Get user by ID
-    async getUserById(req: Request, res: Response): Promise<Response> {
-        try {
-            const { id } = req.params;
-            const user = await getUser({_id:id});
-
-            if (!user) {
-                return res.status(404).json({ message: 'User not found' });
+            const { email, contactNo } = req.body;
+            
+            if (!email && !contactNo) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Either email or contact number is required'
+                });
             }
 
-            return res.status(200).json(user);
+            const result = await UserRepository.checkExistingUser(email, contactNo);
+            return res.status(200).json({
+                success: !result.isError,
+                message: result.message
+            });
         } catch (error) {
-            logger.error('Error fetching user:', error);
-            return res.status(500).json({ message: 'Internal Server Error' });
+            logger.error('Error checking existing user:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Internal server error while checking user details'
+            });
         }
     }
 }

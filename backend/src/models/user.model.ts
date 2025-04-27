@@ -1,14 +1,18 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { UserRole } from '../utils/constants.js';
 import bcrypt from 'bcrypt';
+import { GenderValues } from '../utils/constants.js';
 
 export interface IUser extends Document {
     userId: string;
     name: string;
     email: string;
     passwordHash: string;
+    age: number;
+    gender: GenderValues;
     role: UserRole;
     isVerified: boolean;
+    contactNo: string;
     comparePassword(password: string): Promise<boolean>;
 }
 
@@ -38,6 +42,19 @@ const userSchema = new Schema({
     role: {
         type: String,
         enum: Object.values(UserRole),
+        required: true
+    },
+    age: {
+        type: Number,
+        required: true
+    },
+    gender: {
+        type: String,
+        enum: Object.values(GenderValues),
+        required: true
+    },
+    contactNo: {
+        type: String,
         required: true
     },
     isVerified: {

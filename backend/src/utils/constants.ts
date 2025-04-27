@@ -12,9 +12,9 @@ export enum VerificationStatus {
 }
 
 export enum ContractStatus {
-    PENDING = 'PENDING',
-    APPROVED = 'APPROVED',
-    FLAGGED = 'FLAGGED',
+    AWAITING = 'AWAITING',
+    ACTIVE = 'ACTIVE',
+    COMPLETED = 'COMPLETED',
     CANCELLED = 'CANCELLED'
 }
 
@@ -22,6 +22,12 @@ export enum PaymentStatus {
     PAID = 'PAID',
     PENDING = 'PENDING',
     FAILED = 'FAILED'
+}
+
+export enum GenderValues {
+    MALE = 'male',
+    FEMALE = 'female',
+    OTHER = 'other'
 }
 
 export const ERROR_MESSAGES = {

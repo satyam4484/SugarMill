@@ -19,7 +19,7 @@ const contractorSchema = new Schema({
     },
     documents: {
         type: Schema.Types.ObjectId,
-        ref: 'Document',
+        ref: 'Documents',
         required: true
     },
     verificationStatus: {
@@ -44,7 +44,6 @@ const contractorSchema = new Schema({
     timestamps: true
 });
 
-// Indexes for faster queries
 contractorSchema.index({ user: 1 });
 contractorSchema.index({ verificationStatus: 1 });
 contractorSchema.index({ isActive: 1 });

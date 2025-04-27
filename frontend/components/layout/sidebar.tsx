@@ -44,7 +44,6 @@ interface SidebarItem {
 }
 
 export function Sidebar({ className, role = "admin", ...props }: SidebarProps) {
-  console.log("roll--",role)
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null)
@@ -120,26 +119,26 @@ export function Sidebar({ className, role = "admin", ...props }: SidebarProps) {
             href: "/mill-owner/contractors",
             icon: <UserCircle className="h-5 w-5" />,
           },
-          {
-            title: "Verification",
-            href: "/mill-owner/verification",
-            icon: <Fingerprint className="h-5 w-5" />,
-          },
-          {
-            title: "Notifications",
-            href: "/mill-owner/notifications",
-            icon: <Bell className="h-5 w-5" />,
-          },
-          {
-            title: "Reports",
-            href: "/mill-owner/reports",
-            icon: <FileText className="h-5 w-5" />,
-          },
-          {
-            title: "Settings",
-            href: "/mill-owner/settings",
-            icon: <Settings className="h-5 w-5" />,
-          },
+          // {
+          //   title: "Verification",
+          //   href: "/mill-owner/verification",
+          //   icon: <Fingerprint className="h-5 w-5" />,
+          // },
+          // {
+          //   title: "Notifications",
+          //   href: "/mill-owner/notifications",
+          //   icon: <Bell className="h-5 w-5" />,
+          // },
+          // {
+          //   title: "Reports",
+          //   href: "/mill-owner/reports",
+          //   icon: <FileText className="h-5 w-5" />,
+          // },
+          // {
+          //   title: "Settings",
+          //   href: "/mill-owner/settings",
+          //   icon: <Settings className="h-5 w-5" />,
+          // },
         ]
       case CustomerRoles.LABOURER:
         return [
@@ -168,13 +167,13 @@ export function Sidebar({ className, role = "admin", ...props }: SidebarProps) {
             href: "/contractor/conflicts",
             icon: <AlertTriangle className="h-5 w-5" />,
           },
+          // {
+          //   title: "Vehicles",
+          //   href: "/contractor/vehicles",
+          //   icon: <Truck className="h-5 w-5" />,
+          // },
           {
-            title: "Vehicles",
-            href: "/contractor/vehicles",
-            icon: <Truck className="h-5 w-5" />,
-          },
-          {
-            title: "Agreement History",
+            title: "Contracts History",
             href: "/contractor/history",
             icon: <FileText className="h-5 w-5" />,
           },
@@ -247,12 +246,12 @@ export function Sidebar({ className, role = "admin", ...props }: SidebarProps) {
         className={cn("hidden border-r bg-background h-screen md:flex md:w-[240px] lg:w-[300px] flex-col", className)}
         {...props}
       >
-        <div className="py-4 px-3 border-b">
+        {/* <div className="py-4 px-3 border-b">
           <Link href="/" className="flex items-center gap-2 font-semibold">
             <Building className="h-5 w-5" />
             <span>Sugar Mill Management</span>
           </Link>
-        </div>
+        </div> */}
         <ScrollArea className="flex-1">
           <div className="space-y-1 p-2">
             {navItems.map((item) => (

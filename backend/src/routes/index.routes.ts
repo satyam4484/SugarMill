@@ -4,13 +4,16 @@ import contractorRoutes from './contractor.routes.js';
 import labourRoutes from './labour.routes.js'
 import millRoutes from './mill.routes.js'
 import customerRoutes from './customer.routes.js'
-
+import documentRoutes from './document.routes.js';
+import userRoutes from './user.routes.js';
 const router = Router();
 
 router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
 router.use('/contractors', contractorRoutes); 
 router.use('/labour',labourRoutes)
 router.use('/mill',millRoutes)
 router.use('/customers',customerRoutes)
+router.use('/documents',documentRoutes)
 
 export default router;

@@ -2,9 +2,42 @@ import logger from "../utils/logger.js";// Assuming you have a logger utility
 import User ,{ IUser as UserType} from "../models/user.model.js";
 import { UserRole } from "../utils/constants.js";
 import { FilterQuery } from "mongoose";
-// Assuming you have a User model defined in your models directory
 
+export const checkExistingUser = async (email?: string, contactNo?: string): Promise<any> => {
+    const response: any = {
+        isError: false,
+        message: 'User details are unique',
+        data: null
+    };
+    
+    try {
+        if (email) {
+            const existingEmail = await User.findOne({ email });
+            if (existingEmail) {
+                response.isError = true;
+                response.message = 'Email already exists';
+                return response;
+            }
+        }
 
+        if (contactNo) {
+            const existingContact = await User.findOne({ contactNo });
+            if (existingContact) {
+                response.isError = true;
+                response.message = 'Contact number already exists';
+                return response;
+            }
+        }
+
+        return response;
+    } catch (error) {
+        logger.error('Error checking existing user details:', error);
+        response.isError = true;
+        response.message = 'Error checking existing user details';
+        response.data = error;
+        return response;
+    }
+};
 
 export const getAllUsers = async (): Promise<UserType[]> => {
     try {

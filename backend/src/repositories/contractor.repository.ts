@@ -1,17 +1,64 @@
 import Contractor, { IContractor } from '../models/contractor.model.js';
 import logger from '../utils/logger.js';
 import mongoose from 'mongoose';
+import { generateUniqueUserId, generateSecurePassword } from './user.repository.js';
+import { createUser } from './auth.repository.js';
+import User ,{ IUser } from '../models/user.model.js'
+import { createDocuments } from './document.repository.js';
 
 // Create a new contractor
-export const createContractor = async (contractorData: Partial<IContractor>): Promise<IContractor> => {
+export const createContractor = async (contractorData: any): Promise<{userId: string, password: string}> => {
+    let createdUser = null;
     try {
         logger.info('Creating a new contractor record');
-        const contractor = new Contractor(contractorData);
+        const { name, email, role } = contractorData as any;
+        logger.info('Generating new UserId based on the details provided');
+        const userId = await generateUniqueUserId(name, email, role);
+
+        // write function to generate password for user
+        const password = generateSecurePassword(name, role);
+
+        logger.info('User id and password generate generaed successfully  ', userId);
+
+        // Create new user
+        createdUser = await createUser({
+            userId,
+            gender: contractorData.gender,
+            age: contractorData.age,
+            email,
+            passwordHash: password,
+            name,
+            contactNo: contractorData.contactNo,
+            role: role
+        });
+        console.log("created user", createdUser);
+
+        console.log("creating document object for contractor");
+        const documentResponse: any  = await  createDocuments(contractorData.documents);
+        if(documentResponse.isError) {
+            logger.error('Error creating documents for contractor:', documentResponse.message);
+            throw new Error('Failed to create contractor');
+        }
+        console.log("document created successfully",documentResponse.data);
+        const contractor = new Contractor({
+            user: createdUser._id,
+            documents: documentResponse.data,
+            experience: contractorData.experience,
+        });
         await contractor.save();
         logger.success(`Contractor created successfully with ID: ${contractor._id}`);
-        return contractor;
+        return {userId, password};
     } catch (error) {
         logger.error('Error creating contractor:', error);
+        // If user was created but contractor creation failed, delete the user
+        if (createdUser) {
+            try {
+                await User.findByIdAndDelete(createdUser._id);
+                logger.info(`Cleaned up user ${createdUser._id} after contractor creation failure`);
+            } catch (cleanupError) {
+                logger.error('Error cleaning up user after contractor creation failure:', cleanupError);
+            }
+        }
         throw new Error('Failed to create contractor');
     }
 };
@@ -39,16 +86,26 @@ export const getContractorById = async (id: string): Promise<IContractor | null>
 };
 
 // Get all contractors
-export const getAllContractors = async (): Promise<IContractor[]> => {
+export const getAllContractors = async (query?:any): Promise<IContractor[]> => {
     try {
         logger.info('Fetching all contractors');
-        const contractors = await Contractor.find().populate('user').populate('documents');
+        const contractors = await Contractor.find().select('-experience -specialization -updatedAt -createdAt').populate([
+            {
+                path: 'user',
+                select:'-passwordHash -updatedAt '
+            },
+            {
+                path: 'documents',
+                select:'aadhar.aadharNumber pancard.panNumber'
+            }
+        ]).limit(query?.limit);
         logger.info(`Successfully fetched ${contractors.length} contractors`);
         return contractors;
     } catch (error) {
         logger.error('Error fetching all contractors:', error);
         throw new Error('Error fetching all contractors');
     }
+
 };
 
 // Update contractor by ID

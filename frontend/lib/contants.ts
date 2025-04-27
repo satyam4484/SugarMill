@@ -30,3 +30,8 @@ export const AppRouterConstant = {
     'CONTRACTOR' : 'contractor',
     'LABOURER' : 'labour'
 }
+
+
+export const ContractorConstant = {
+    NAME:'Contractor'
+}

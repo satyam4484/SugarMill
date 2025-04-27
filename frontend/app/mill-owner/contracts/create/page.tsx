@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { mockContractors, mockLabourers } from "@/lib/mock-data"
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { CalendarIcon, CheckCircle, FileUp, Fingerprint, Plus, Trash, Upload, X, Users } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -28,6 +28,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { contractors } from "@/network/agent"
+
 
 export default function CreateContractPage() {
   const { toast } = useToast()
@@ -38,6 +40,26 @@ export default function CreateContractPage() {
   const [selectedLabourers, setSelectedLabourers] = useState<typeof mockLabourers>([])
   const [showVerificationResult, setShowVerificationResult] = useState(false)
   const [hasConflicts, setHasConflicts] = useState(false)
+  const [notes, setNotes] = useState("")
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const [contractorDetails, setContractorDetails] = useState<any[]>([]);
+
+  const getContractorsHandler = async () => {
+    try{
+      const response: any = contractors.getAllContractors();
+      setContractorDetails(response.data);
+    }catch(error) {
+      console.log("Error fetchging contractors")
+    }
+  }
+
+
+  useEffect(() => {
+    getContractorsHandler();
+  },[])
+
+
 
   const handleAddLabourer = (labourer: (typeof mockLabourers)[0]) => {
     if (!selectedLabourers.find((l) => l.id === labourer.id)) {
@@ -63,10 +85,50 @@ export default function CreateContractPage() {
   }
 
   const handleSubmit = () => {
+    // Validate required fields
+    if (!selectedContractor) {
+      toast({
+        title: "Missing Information",
+        description: "Please select a contractor.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!startDate || !endDate) {
+      toast({
+        title: "Missing Information",
+        description: "Please select start and end dates.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!advanceAmount) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter an advance amount.",
+        variant: "destructive",
+      })
+      return
+    }
+
     toast({
       title: "Contract Created",
       description: "Your contract has been created successfully.",
     })
+  }
+
+  const validateDatesBeforeAddingLabourers = () => {
+    if (!startDate || !endDate) {
+      toast({
+        title: "Missing Information",
+        description: "Please select start and end dates before adding labourers.",
+        variant: "destructive",
+      })
+      return false
+    }
+    return true
   }
 
   return (
@@ -95,10 +157,34 @@ export default function CreateContractPage() {
                   <SelectTrigger id="contractor">
                     <SelectValue placeholder="Select a contractor" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-[300px]">
+                    <div className="px-3 py-2 sticky top-0 bg-background z-10">
+                      <Input 
+                        placeholder="Search contractor..." 
+                        className="h-9"
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                        onChange={(e) => {
+                          const searchInput = e.target.value.toLowerCase();
+                          const searchResults = document.querySelectorAll('[data-contractor-item]');
+                          searchResults.forEach((item) => {
+                            const text = item.textContent?.toLowerCase() || '';
+                            if (text.includes(searchInput)) {
+                              item.classList.remove('hidden');
+                            } else {
+                              item.classList.add('hidden');
+                            }
+                          });
+                        }}
+                      />
+                    </div>
                     {mockContractors.map((contractor) => (
-                      <SelectItem key={contractor.id} value={contractor.id}>
-                        {contractor.name} ({contractor.totalLabourers} labourers)
+                      <SelectItem 
+                        key={contractor.id} 
+                        value={contractor.id}
+                        data-contractor-item
+                      >
+                        {contractor.name} (ID: {contractor.id})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -161,7 +247,13 @@ export default function CreateContractPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="notes">Additional Notes</Label>
-                <Textarea id="notes" placeholder="Enter any additional notes or terms" className="min-h-[100px]" />
+                <Textarea 
+                  id="notes" 
+                  placeholder="Enter any additional notes or terms" 
+                  className="min-h-[100px]"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
               </div>
 
               <div className="space-y-2">
@@ -187,9 +279,13 @@ export default function CreateContractPage() {
                   <CardTitle>Team Labourers</CardTitle>
                   <CardDescription>Add labourers to this contract</CardDescription>
                 </div>
-                <Dialog>
+                <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button>
+                    <Button onClick={() => {
+                      if (validateDatesBeforeAddingLabourers()) {
+                        setDialogOpen(true);
+                      }
+                    }}>
                       <Plus className="mr-2 h-4 w-4" />
                       Add Labourer
                     </Button>
@@ -258,7 +354,7 @@ export default function CreateContractPage() {
                       </Table>
                     </div>
                     <DialogFooter>
-                      <Button variant="outline">Done</Button>
+                      <Button variant="outline" onClick={() => setDialogOpen(false)}>Done</Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
@@ -414,20 +510,23 @@ export default function CreateContractPage() {
                           : "Not specified"}
                       </p>
                     </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <h4 className="text-sm font-medium text-muted-foreground mb-1">Advance Amount</h4>
-                      <p>{advanceAmount ? `₹${Number.parseInt(advanceAmount).toLocaleString()}` : "Not specified"}</p>
+                      <p>{advanceAmount ? `₹${advanceAmount}` : "Not specified"}</p>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-muted-foreground mb-1">Total Labourers</h4>
-                      <p>{selectedLabourers.length}</p>
+                      <h4 className="text-sm font-medium text-muted-foreground mb-1">Team Size</h4>
+                      <p>{selectedLabourers.length} Labourers</p>
                     </div>
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="flex justify-end gap-2">
-                <Button variant="outline">Save as Draft</Button>
-                <Button onClick={handleSubmit}>Create Contract</Button>
+              <CardFooter>
+                <Button className="w-full" onClick={handleSubmit}>
+                  Create Contract
+                </Button>
               </CardFooter>
             </Card>
           </div>

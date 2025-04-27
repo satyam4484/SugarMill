@@ -6,6 +6,13 @@ export class ContractorController {
     static async create(req: Request, res: Response): Promise<Response> {
         try {
             const contractorData = req.body;
+            const files = req.files as Express.Multer.File[];
+            if (!files || files.length === 0) {
+                return res.status(400).json({ message: 'No files uploaded' });
+            }
+            const filePaths = files.map(file => file.path);
+            contractorData.documents.aadhar.aadharPhoto = filePaths[0];
+            contractorData.documents.pancard.panPhoto = filePaths[1];
             const contractor = await ContractorRepository.createContractor(contractorData);
             return res.status(201).json(contractor);
         } catch (error) {
@@ -13,6 +20,7 @@ export class ContractorController {
             return res.status(500).json({ message: 'Failed to create contractor' });
         }
     }
+
 
     static async getById(req: Request, res: Response): Promise<Response> {
         try {
@@ -30,7 +38,9 @@ export class ContractorController {
 
     static async getAll(req: Request, res: Response): Promise<Response> {
         try {
-            const contractors = await ContractorRepository.getAllContractors();
+            const query = req.query;
+            console.log("query ---",query);
+            const contractors = await ContractorRepository.getAllContractors(query);
             return res.status(200).json(contractors);
         } catch (error) {
             logger.error('Error fetching all contractors:', error);
