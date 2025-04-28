@@ -14,8 +14,10 @@ interface ISubscription {
 export interface IMill extends Document {
     name: string;
     user: mongoose.Types.ObjectId;
-    documents: IDocuments;
     subscription: ISubscription;
+    location: string;
+    address: string;
+    GST_NO: string;
 }
 
 const millSchema = new Schema({
@@ -33,7 +35,7 @@ const millSchema = new Schema({
         license: {
             type: String,
             required: true
-        },
+        },  
         gst: {
             type: String,
             required: true
@@ -52,6 +54,18 @@ const millSchema = new Schema({
             type: Boolean,
             default: true
         }
+    },
+    location: {
+        type: String,
+        required: true
+    },
+    address: {
+        type: String,
+        required: true
+    },
+    GST_NO: {
+        type: String,
+        required: true
     }
 }, {
     timestamps: true

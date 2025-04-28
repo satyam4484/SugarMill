@@ -8,10 +8,7 @@ export interface IUser extends Document {
     name: string;
     email: string;
     passwordHash: string;
-    age: number;
-    gender: GenderValues;
     role: UserRole;
-    isVerified: boolean;
     contactNo: string;
     comparePassword(password: string): Promise<boolean>;
 }
@@ -44,22 +41,9 @@ const userSchema = new Schema({
         enum: Object.values(UserRole),
         required: true
     },
-    age: {
-        type: Number,
-        required: true
-    },
-    gender: {
-        type: String,
-        enum: Object.values(GenderValues),
-        required: true
-    },
     contactNo: {
         type: String,
         required: true
-    },
-    isVerified: {
-        type: Boolean,
-        default: false
     }
 }, {
     timestamps: true

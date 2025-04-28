@@ -29,9 +29,9 @@ import {
 } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { contractors } from "@/network/agent"
+import withAuth from "@/hocs/withAuth"
 
-
-export default function CreateContractPage() {
+function CreateContractPage() {
   const { toast } = useToast()
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
@@ -41,13 +41,21 @@ export default function CreateContractPage() {
   const [showVerificationResult, setShowVerificationResult] = useState(false)
   const [hasConflicts, setHasConflicts] = useState(false)
   const [notes, setNotes] = useState("")
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [errors, setErrors] = useState<{
+    contractor?: string;
+    dates?: string;
+    advance?: string;
+    agreement?: string;
+  }>({})
+  const [agreement, setAgreement] = useState<File | null>(null)
+  const [agreementPreview, setAgreementPreview] = useState<string | null>(null)
 
   const [contractorDetails, setContractorDetails] = useState<any[]>([]);
 
   const getContractorsHandler = async () => {
     try{
-      const response: any = contractors.getAllContractors();
+      const response: any = await contractors.getAllContractors();
       setContractorDetails(response.data);
     }catch(error) {
       console.log("Error fetchging contractors")
@@ -85,51 +93,98 @@ export default function CreateContractPage() {
   }
 
   const handleSubmit = () => {
-    // Validate required fields
+    const newErrors: typeof errors = {};
+
     if (!selectedContractor) {
-      toast({
-        title: "Missing Information",
-        description: "Please select a contractor.",
-        variant: "destructive",
-      })
-      return
+      newErrors.contractor = "Please select a contractor";
     }
 
     if (!startDate || !endDate) {
-      toast({
-        title: "Missing Information",
-        description: "Please select start and end dates.",
-        variant: "destructive",
-      })
-      return
+      newErrors.dates = "Please select both start and end dates";
+    } else if (startDate >= endDate) {
+      newErrors.dates = "Start date must be before end date";
     }
 
     if (!advanceAmount) {
-      toast({
-        title: "Missing Information",
-        description: "Please enter an advance amount.",
-        variant: "destructive",
-      })
-      return
+      newErrors.advance = "Please enter an advance amount";
     }
 
-    toast({
-      title: "Contract Created",
-      description: "Your contract has been created successfully.",
-    })
+    if (!agreement) {
+      newErrors.agreement = "Please upload an agreement file";
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length === 0) {
+      toast({
+        title: "Contract Created",
+        description: "Your contract has been created successfully.",
+      })
+    }
   }
+
+
+const handleAgreementChange = (file: File | null) => {
+  if (!file) {
+    setAgreement(null);
+    setAgreementPreview(null);
+    return;
+  }
+
+  // Validate file type
+  if (file.type !== 'application/pdf') {
+    setErrors(prev => ({ ...prev, agreement: "Only PDF files are allowed" }));
+    return;
+  }
+
+  // Validate file size (5MB = 5 * 1024 * 1024 bytes)
+  if (file.size > 5 * 1024 * 1024) {
+    setErrors(prev => ({ ...prev, agreement: "File size should not exceed 5MB" }));
+    return;
+  }
+
+  setErrors(prev => ({ ...prev, agreement: undefined }));
+  setAgreement(file);
+  
+  // Revoke previous preview URL to prevent memory leaks
+  if (agreementPreview) {
+    URL.revokeObjectURL(agreementPreview);
+  }
+  
+  const fileUrl = URL.createObjectURL(file);
+  setAgreementPreview(fileUrl);
+}
+
+
+
 
   const validateDatesBeforeAddingLabourers = () => {
-    if (!startDate || !endDate) {
-      toast({
-        title: "Missing Information",
-        description: "Please select start and end dates before adding labourers.",
-        variant: "destructive",
-      })
-      return false
+    if(!selectedContractor)  {
+      setErrors(prev => ({
+        ...prev,
+        contractor: "Please select a contractor before adding labourers"
+      }))
     }
-    return true
+    if (!startDate || !endDate) {
+      setErrors(prev => ({
+        ...prev,
+        dates: "Please select start and end dates before adding labourers"
+      }));
+      return false;
+    }
+
+    if (startDate >= endDate) {
+      setErrors(prev => ({
+        ...prev,
+        dates: "Start date must be before end date"
+      }));
+      return false;
+    }
+    setErrors(prev => ({ ...prev, dates: undefined }));
+    return true;
   }
+
+  console.log("contractor details--",contractorDetails)
 
   return (
     <DashboardLayout role="mill-owner">
@@ -153,8 +208,11 @@ export default function CreateContractPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="contractor">Select Contractor</Label>
-                <Select value={selectedContractor} onValueChange={setSelectedContractor}>
-                  <SelectTrigger id="contractor">
+                <Select value={selectedContractor} onValueChange={(value) => {
+                  setSelectedContractor(value);
+                  setErrors(prev => ({ ...prev, contractor: undefined }));
+                }}>
+                  <SelectTrigger id="contractor" className={errors.contractor ? "border-red-500" : ""}>
                     <SelectValue placeholder="Select a contractor" />
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px]">
@@ -178,17 +236,20 @@ export default function CreateContractPage() {
                         }}
                       />
                     </div>
-                    {mockContractors.map((contractor) => (
+                    {contractorDetails && contractorDetails.map((contractor) => (
                       <SelectItem 
-                        key={contractor.id} 
-                        value={contractor.id}
+                        key={contractor._id} 
+                        value={contractor._id}
                         data-contractor-item
                       >
-                        {contractor.name} (ID: {contractor.id})
+                        {contractor?.user?.name} (ID: {contractor?.user?.userId})
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {errors.contractor && (
+                  <p className="text-sm text-red-500 col-span-2 mt-1">{errors.contractor}</p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -201,6 +262,7 @@ export default function CreateContractPage() {
                         className={cn(
                           "w-full justify-start text-left font-normal",
                           !startDate && "text-muted-foreground",
+                          errors.dates && "border-red-500"
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -221,6 +283,7 @@ export default function CreateContractPage() {
                         className={cn(
                           "w-full justify-start text-left font-normal",
                           !endDate && "text-muted-foreground",
+                          errors.dates && "border-red-500"
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -232,6 +295,9 @@ export default function CreateContractPage() {
                     </PopoverContent>
                   </Popover>
                 </div>
+                {errors.dates && (
+                  <p className="text-sm text-red-500 col-span-2 mt-1">{errors.dates}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -241,8 +307,15 @@ export default function CreateContractPage() {
                   type="number"
                   placeholder="Enter advance amount"
                   value={advanceAmount}
-                  onChange={(e) => setAdvanceAmount(e.target.value)}
+                  onChange={(e) => {
+                    setAdvanceAmount(e.target.value);
+                    setErrors(prev => ({ ...prev, advance: undefined }));
+                  }}
+                  className={errors.advance ? "border-red-500" : ""}
                 />
+                {errors.advance && (
+                  <p className="text-sm text-red-500 mt-1">{errors.advance}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -258,16 +331,79 @@ export default function CreateContractPage() {
 
               <div className="space-y-2">
                 <Label>Upload Agreement</Label>
-                <div className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center">
-                  <FileUp className="h-8 w-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Drag and drop your agreement file here, or click to browse
-                  </p>
-                  <Button variant="outline" size="sm">
-                    <Upload className="mr-2 h-4 w-4" />
-                    Browse Files
-                  </Button>
+                <div 
+                  className={cn(
+                    "border-2 border-dashed rounded-lg p-6",
+                    errors.agreement ? "border-red-500" : ""
+                  )}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const file = e.dataTransfer.files[0];
+                    handleAgreementChange(file);
+                  }}
+                >
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    className="hidden"
+                    id="agreement-upload"
+                    onChange={(e) => handleAgreementChange(e.target.files?.[0] || null)}
+                  />
+                  {!agreement ? (
+                    <label 
+                      htmlFor="agreement-upload" 
+                      className="flex flex-col items-center justify-center cursor-pointer"
+                    >
+                      <FileUp className="h-8 w-8 text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Drag and drop your agreement file here, or click to browse
+                      </p>
+                      <Button variant="outline" size="sm" type="button">
+                        <Upload className="mr-2 h-4 w-4" />
+                        Browse Files
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Only PDF files up to 5MB are allowed
+                      </p>
+                    </label>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <FileUp className="h-5 w-5 text-muted-foreground" />
+                          <span className="text-sm font-medium">{agreement.name}</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setAgreement(null);
+                            setAgreementPreview(null);
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {agreementPreview && (
+                        <div className="border rounded-lg overflow-hidden">
+                          <iframe
+                            src={agreementPreview}
+                            className="w-full h-[400px]"
+                            title="Agreement Preview"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
+                {errors.agreement && (
+                  <p className="text-sm text-red-500 mt-1">{errors.agreement}</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -281,7 +417,8 @@ export default function CreateContractPage() {
                 </div>
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button onClick={() => {
+                    <Button onClick={(e) => {
+                      e.preventDefault();
                       if (validateDatesBeforeAddingLabourers()) {
                         setDialogOpen(true);
                       }
@@ -535,3 +672,6 @@ export default function CreateContractPage() {
     </DashboardLayout>
   )
 }
+
+
+export default withAuth(CreateContractPage);

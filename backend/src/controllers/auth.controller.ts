@@ -152,8 +152,7 @@ export class AuthController {
                     userId: user.userId,
                     name: user.name,
                     email: user.email,
-                    role: user.role,
-                    isVerified: user.isVerified
+                    role: user.role
                 }
             };
             return res.status(200).json(response);

@@ -1,13 +1,24 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { VerificationStatus } from '../utils/constants.js';
 
+export interface IGuarantor extends Document {
+    name: string;
+    contact: string;
+}
+
 export interface IContractor extends Document {
     user: mongoose.Types.ObjectId;
     documents: mongoose.Types.ObjectId;
     verificationStatus: VerificationStatus;
     isActive: boolean;
-    experience: number; 
-    specialization: string[];
+    companyName: string;
+    location: string;
+    address: string;
+    companyRegisterationNo: string;
+    GST_NO: string;
+    ownerName: string;
+    ownerContactNo: string;
+    Guarantor: IGuarantor[];  // Changed to array of guarantors
 }
 
 const contractorSchema = new Schema({
@@ -31,15 +42,47 @@ const contractorSchema = new Schema({
         type: Boolean,
         default: true
     },
-    experience: {
-        type: Number,
-        required: true,
-        min: 0
-    },
-    specialization: [{
+    companyName: {
         type: String,
-        trim: true
-    }]
+        required: true
+    },
+    location: {
+        type: String,
+        required: true
+    },
+    address: {
+        type: String,
+        required: true
+    },
+    companyRegisterationNo: {
+        type: String,
+        required: true
+    },
+    GST_NO: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    ownerName: {
+        type: String,
+        required: true
+    },
+    ownerContactNo: {
+        type: String,
+        required: true
+    },
+    Guarantor: {
+        type: [{ name: String, contact: String }],
+        required: true,
+        validate: [
+            { 
+                validator: function (guarantors: IGuarantor[]) {
+                    return guarantors.length > 0;
+                },
+                message: 'At least one guarantor is required'
+            }
+        ]
+    }
 }, {
     timestamps: true
 });

@@ -3,7 +3,6 @@ import logger from '../utils/logger.js';
 import { createMill, getMillById, updateMill, deleteMill , getAllMills} from '../repositories/mill.repository.js';
 
 export class MillController {
-    // Create a new mill
     async createMill(req: Request, res: Response): Promise<Response> {
         try {
             const millData = req.body;
@@ -14,7 +13,6 @@ export class MillController {
             return res.status(500).json({ message: 'Internal Server Error' });
         }
     }
-
     async getAllMills(req: Request, res: Response): Promise<Response> {
         try {
             const mills = await getAllMills();
@@ -24,8 +22,6 @@ export class MillController {
             return res.status(500).json({ message: 'Internal Server Error' });
         }
     }
-
-    // Get mill by ID
     async getMillById(req: Request, res: Response): Promise<Response> {
         try {
             const { id } = req.params;
@@ -42,7 +38,6 @@ export class MillController {
         }
     }
 
-    // Update mill by ID
     async updateMill(req: Request, res: Response): Promise<Response> {
         try {
             const { id } = req.params;
@@ -60,7 +55,6 @@ export class MillController {
         }
     }
 
-    // Delete mill by ID
     async deleteMill(req: Request, res: Response): Promise<Response> {
         try {
             const { id } = req.params;

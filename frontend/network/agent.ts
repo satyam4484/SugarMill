@@ -14,7 +14,7 @@ export const userAuth = {
 
 export const contractors = {
     createContractor: (data: any) => axiosClient({"Content-Type": "multipart/form-data"}).post(`${apiEndpoints.contractor}`,data ),
-    getAllContractors: (query?:any) => axiosClient().get(`${apiEndpoints.contractor}?${query}`),
+    getAllContractors: (query?:any) => axiosClient().get(`${apiEndpoints.contractor}?${query?query:''}`),
 }
 
 export const documents = {

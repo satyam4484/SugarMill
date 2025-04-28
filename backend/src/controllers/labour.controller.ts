@@ -6,6 +6,8 @@ export class LabourerController {
     static async create(req: Request, res: Response): Promise<Response> {
         try {
             const contractorData = req.body;
+            const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+            console.log("files",files)
             const labourer = await LabourRepository.createLabour(contractorData);
             return res.status(201).json(labourer);
         } catch (error) {

@@ -5,10 +5,12 @@ import { generateUniqueUserId, generateSecurePassword } from './user.repository.
 import { createUser } from './auth.repository.js';
 import User ,{ IUser } from '../models/user.model.js'
 import { createDocuments } from './document.repository.js';
+import Documents from '../models/documents.model.js';
 
 // Create a new contractor
 export const createContractor = async (contractorData: any): Promise<{userId: string, password: string}> => {
     let createdUser = null;
+    let createdDocument = null;
     try {
         logger.info('Creating a new contractor record');
         const { name, email, role } = contractorData as any;
@@ -23,8 +25,6 @@ export const createContractor = async (contractorData: any): Promise<{userId: st
         // Create new user
         createdUser = await createUser({
             userId,
-            gender: contractorData.gender,
-            age: contractorData.age,
             email,
             passwordHash: password,
             name,
@@ -39,11 +39,18 @@ export const createContractor = async (contractorData: any): Promise<{userId: st
             logger.error('Error creating documents for contractor:', documentResponse.message);
             throw new Error('Failed to create contractor');
         }
-        console.log("document created successfully",documentResponse.data);
+        createdDocument = documentResponse.data;
         const contractor = new Contractor({
             user: createdUser._id,
             documents: documentResponse.data,
-            experience: contractorData.experience,
+            companyName: contractorData.companyName,
+            location: contractorData.location,
+            address: contractorData.address,
+            companyRegisterationNo: contractorData.companyRegisterationNo,
+            GST_NO: contractorData.GST_NO,
+            ownerName: contractorData.ownerName,
+            ownerContactNo: contractorData.ownerContactNo,
+            Guarantor:contractorData.Guarantor
         });
         await contractor.save();
         logger.success(`Contractor created successfully with ID: ${contractor._id}`);
@@ -51,6 +58,14 @@ export const createContractor = async (contractorData: any): Promise<{userId: st
     } catch (error) {
         logger.error('Error creating contractor:', error);
         // If user was created but contractor creation failed, delete the user
+        if (createdDocument) {
+            try {
+                await Documents.findByIdAndDelete(createdDocument);
+                logger.info(`Cleaned up documents ${createdDocument} after contractor creation failure`);
+            } catch (cleanupError) {
+                logger.error('Error cleaning up documents after contractor creation failure:', cleanupError);
+            }
+        }
         if (createdUser) {
             try {
                 await User.findByIdAndDelete(createdUser._id);
@@ -62,7 +77,6 @@ export const createContractor = async (contractorData: any): Promise<{userId: st
         throw new Error('Failed to create contractor');
     }
 };
-
 
 // Get contractor by ID
 export const getContractorById = async (id: string): Promise<IContractor | null> => {
@@ -105,7 +119,6 @@ export const getAllContractors = async (query?:any): Promise<IContractor[]> => {
         logger.error('Error fetching all contractors:', error);
         throw new Error('Error fetching all contractors');
     }
-
 };
 
 // Update contractor by ID

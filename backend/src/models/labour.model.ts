@@ -1,13 +1,16 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { VerificationStatus } from '../utils/constants.js';
+import { GenderValues } from '../utils/constants.js';
 
 export interface ILabourer extends Document {
     user: mongoose.Types.ObjectId;
     documents: mongoose.Types.ObjectId;
     verificationStatus: VerificationStatus;
     isActive: boolean;
-    experience: number;
-    
+    contractor: mongoose.Types.ObjectId; 
+    Age: number;
+    Gender:GenderValues;
+    profilePicture: string;
 }
 
 const LabourerSchema = new Schema({
@@ -32,8 +35,23 @@ const LabourerSchema = new Schema({
         type: Boolean,
         default: true
     },
-    experience: {
+    contractor:{
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    Age: {
         type: Number,
+        required: true,
+        min: 0
+    },
+    Gender: {
+        type: String,
+        enum: Object.values(GenderValues),
+        required: true
+    },
+    profilePicture: {
+        type: String,
         required: true
     }
 }, {

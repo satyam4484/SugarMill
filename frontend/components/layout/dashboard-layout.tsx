@@ -20,6 +20,7 @@ export function DashboardLayout({
   children,
 }: DashboardLayoutProps) {
   const {userDetails} = useGlobalContext();
+  
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
