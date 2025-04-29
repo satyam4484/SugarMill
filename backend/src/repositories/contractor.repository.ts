@@ -50,7 +50,7 @@ export const createContractor = async (contractorData: any): Promise<{userId: st
             GST_NO: contractorData.GST_NO,
             ownerName: contractorData.ownerName,
             ownerContactNo: contractorData.ownerContactNo,
-            Guarantor:contractorData.Guarantor
+            // Guarantor:contractorData.Guarantor
         });
         await contractor.save();
         logger.success(`Contractor created successfully with ID: ${contractor._id}`);

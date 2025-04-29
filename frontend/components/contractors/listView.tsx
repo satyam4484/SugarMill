@@ -44,10 +44,10 @@ export default function ListView({ contractor }: { contractor: any }) {
                     </div>
                 </div>
             </TableCell>
-            <TableCell>{contractor?.user?.age}</TableCell>
-            <TableCell>{contractor?.user?.gender}</TableCell>
-            <TableCell>{contractor?.documents?.aadhar.aadharNumber}</TableCell>
-            <TableCell>{contractor?.documents?.pancard.panNumber}</TableCell>
+            <TableCell>{contractor?.companyName}</TableCell>
+            <TableCell>{contractor?.ownerName}</TableCell>
+            <TableCell>{contractor?.location}</TableCell>
+            {/* <TableCell>{contractor?.documents?.pancard.panNumber}</TableCell> */}
             {/* <TableCell>
                 {contractor.biometricVerified ? (
                     <Badge

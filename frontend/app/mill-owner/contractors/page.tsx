@@ -115,7 +115,7 @@ function ContractorTeamPage() {
                     <SelectItem value="inactive">Inactive</SelectItem>
                   </SelectContent>
                 </Select>
-                <AddForm/>
+                {/* <AddForm/> */}
               </div>
             </div>
 
@@ -140,10 +140,10 @@ function ContractorTeamPage() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Name</TableHead>
-                          <TableHead>Age</TableHead>
-                          <TableHead>Gender</TableHead>
-                          <TableHead>Aadhar Number</TableHead>
-                          <TableHead>Pan Number</TableHead>
+                          <TableHead>Company</TableHead>
+                          <TableHead>Owner Name</TableHead>
+                          <TableHead>Location</TableHead>
+                          {/* <TableHead>Aadhar Number</TableHead> */}
                           <TableHead>Status</TableHead>
                           <TableHead>Verifcation</TableHead>
                         </TableRow>

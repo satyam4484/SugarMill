@@ -10,19 +10,19 @@ export interface IContract extends Document {
     additionalNotes: string;
     agreement: string;
     status: VerificationStatus;
-    laborers: mongoose.Types.ObjectId[];
+    labourers: mongoose.Types.ObjectId[];
 }
 
 // Schema for Contract
 const contractSchema = new Schema({
     millOwner: {
         type: Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'Mill',
         required: true
     },
     contractor: {
         type: Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'Contractor',
         required: true
     },
     startDate: {
@@ -53,16 +53,16 @@ const contractSchema = new Schema({
         default: VerificationStatus.PENDING,
         required: true
     },
-    laborers: [{
+    labourers: [{
         type: Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'Labourer'
     }]
 }, {
     timestamps: true
 });
 
 // Indexes for better query performance
-contractSchema.index({ millOwner: 1, contractor: 1 });
+contractSchema.index({ millOwner: 1, contractor: 1, labourers:1 });
 contractSchema.index({ startDate: 1, endDate: 1 });
 contractSchema.index({ status: 1 });
 

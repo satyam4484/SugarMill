@@ -4,19 +4,22 @@ import { authenticateToken } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
+// Apply authentication middleware to all routes
+router.use(authenticateToken);
+
 // Create a new contract
-router.post('/', authenticateToken, ContractController.createContract);
+router.post('/', ContractController.create);
 
 // Get all contracts
-router.get('/', authenticateToken, ContractController.getContracts);
+router.get('/', ContractController.getAll);
 
-// Get a specific contract by ID
-router.get('/:id', authenticateToken, ContractController.getContractById);
+// Get contract by ID
+router.get('/:id', ContractController.getById);
 
-// Update a contract
-router.put('/:id', authenticateToken, ContractController.updateContract);
+// Update contract by ID
+router.put('/:id', ContractController.update);
 
-// Delete a contract
-router.delete('/:id', authenticateToken, ContractController.deleteContract);
+// Delete contract by ID
+router.delete('/:id', ContractController.delete);
 
 export default router;

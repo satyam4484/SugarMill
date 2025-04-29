@@ -36,6 +36,7 @@ function CreateContractPage() {
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
   const [selectedContractor, setSelectedContractor] = useState("")
+  const [additionalContractors, setAdditionalContractors] = useState<string[]>([])
   const [advanceAmount, setAdvanceAmount] = useState("")
   const [selectedLabourers, setSelectedLabourers] = useState<typeof mockLabourers>([])
   const [showVerificationResult, setShowVerificationResult] = useState(false)
@@ -68,12 +69,22 @@ function CreateContractPage() {
   },[])
 
 
-
-  const handleAddLabourer = (labourer: (typeof mockLabourers)[0]) => {
-    if (!selectedLabourers.find((l) => l.id === labourer.id)) {
-      setSelectedLabourers([...selectedLabourers, labourer])
-    }
+  // Add new function to handle additional contractors
+const handleAddAdditionalContractor = (value: string) => {
+  if (!additionalContractors.includes(value) && value !== selectedContractor) {
+    setAdditionalContractors([...additionalContractors, value])
   }
+}
+
+const handleRemoveAdditionalContractor = (contractorId: string) => {
+  setAdditionalContractors(additionalContractors.filter(id => id !== contractorId))
+}
+
+const handleAddLabourer = (labourer: (typeof mockLabourers)[0]) => {
+  if (!selectedLabourers.find((l) => l.id === labourer.id)) {
+    setSelectedLabourers([...selectedLabourers, labourer])
+  }
+}
 
   const handleRemoveLabourer = (id: string) => {
     setSelectedLabourers(selectedLabourers.filter((l) => l.id !== id))
@@ -207,7 +218,7 @@ const handleAgreementChange = (file: File | null) => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="contractor">Select Contractor</Label>
+                <Label htmlFor="contractor">Select Primary Contractor</Label>
                 <Select value={selectedContractor} onValueChange={(value) => {
                   setSelectedContractor(value);
                   setErrors(prev => ({ ...prev, contractor: undefined }));
@@ -242,14 +253,86 @@ const handleAgreementChange = (file: File | null) => {
                         value={contractor._id}
                         data-contractor-item
                       >
-                        {contractor?.user?.name} (ID: {contractor?.user?.userId})
+                        {contractor?.user?.name} ({contractor?.laboursCount} Labours)
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                {errors.contractor && (
-                  <p className="text-sm text-red-500 col-span-2 mt-1">{errors.contractor}</p>
-                )}
+                {errors.contractor && <p className="text-sm text-red-500">{errors.contractor}</p>}
+              </div>
+
+              {/* Add Additional Contractors Section */}
+              <div className="space-y-2">
+                <Label>Additional Contractors</Label>
+                <Select onValueChange={handleAddAdditionalContractor}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Add additional contractors" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    <div className="px-3 py-2 sticky top-0 bg-background z-10">
+                      <Input 
+                        placeholder="Search contractor..." 
+                        className="h-9"
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                        onChange={(e) => {
+                          const searchInput = e.target.value.toLowerCase();
+                          const searchResults = document.querySelectorAll('[data-additional-contractor-item]');
+                          searchResults.forEach((item) => {
+                            const text = item.textContent?.toLowerCase() || '';
+                            if (text.includes(searchInput)) {
+                              item.classList.remove('hidden');
+                            } else {
+                              item.classList.add('hidden');
+                            }
+                          });
+                        }}
+                      />
+                    </div>
+                    {contractorDetails
+                      .filter(contractor => 
+                        contractor._id !== selectedContractor && 
+                        !additionalContractors.includes(contractor._id)
+                      )
+                      .map(contractor => (
+                        <SelectItem 
+                          key={contractor._id} 
+                          value={contractor._id}
+                          data-additional-contractor-item
+                        >
+                          {contractor.user.name} (ID: {contractor.user.userId})
+                        </SelectItem>
+                      ))
+                    }
+                  </SelectContent>
+                </Select>
+
+                {/* Display Selected Additional Contractors */}
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {additionalContractors.map(contractorId => {
+                    const contractor = contractorDetails.find(c => c._id === contractorId);
+                    return (
+                      <div 
+                        key={contractorId} 
+                        className="inline-flex items-center gap-2 bg-secondary/20 px-3 py-1.5 rounded-full text-sm"
+                      >
+                        <Avatar className="h-5 w-5">
+                          <AvatarImage src={contractor?.photoUrl} />
+                          <AvatarFallback>{contractor?.user?.name?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <span>{contractor?.user?.name}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-4 w-4 p-0 hover:bg-secondary/30"
+                          onClick={() => handleRemoveAdditionalContractor(contractorId)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -363,10 +446,10 @@ const handleAgreementChange = (file: File | null) => {
                       <p className="text-sm text-muted-foreground mb-2">
                         Drag and drop your agreement file here, or click to browse
                       </p>
-                      <Button variant="outline" size="sm" type="button">
+                      {/* <Button variant="outline" size="sm" type="button">
                         <Upload className="mr-2 h-4 w-4" />
                         Browse Files
-                      </Button>
+                      </Button> */}
                       <p className="text-xs text-muted-foreground mt-2">
                         Only PDF files up to 5MB are allowed
                       </p>
@@ -672,6 +755,8 @@ const handleAgreementChange = (file: File | null) => {
     </DashboardLayout>
   )
 }
+
+
 
 
 export default withAuth(CreateContractPage);

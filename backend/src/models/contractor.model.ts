@@ -18,7 +18,8 @@ export interface IContractor extends Document {
     GST_NO: string;
     ownerName: string;
     ownerContactNo: string;
-    Guarantor: IGuarantor[];  // Changed to array of guarantors
+    Guarantor: IGuarantor[];  
+    laboursCount:number;
 }
 
 const contractorSchema = new Schema({
@@ -71,17 +72,9 @@ const contractorSchema = new Schema({
         type: String,
         required: true
     },
-    Guarantor: {
-        type: [{ name: String, contact: String }],
-        required: true,
-        validate: [
-            { 
-                validator: function (guarantors: IGuarantor[]) {
-                    return guarantors.length > 0;
-                },
-                message: 'At least one guarantor is required'
-            }
-        ]
+    laboursCount:{
+        type : Number,
+        default: 0
     }
 }, {
     timestamps: true
