@@ -1,17 +1,84 @@
 import Labourer, { ILabourer } from '../models/labour.model.js';
+import { createUser } from '../repositories/auth.repository.js';
+import { createDocuments } from './document.repository.js';
+import { generateUniqueUserId, generateSecurePassword } from './user.repository.js';
+import Documents from '../models/documents.model.js';
+import User from '../models/user.model.js';
 import logger from '../utils/logger.js';
 import mongoose from 'mongoose';
+import Contractor from '../models/contractor.model.js'
 
 // Create a new labourer
-export const createLabour = async (contractorData: Partial<ILabourer>): Promise<ILabourer> => {
+export const createLabour = async (labourData: any): Promise<{userId: string, password: string}> => {
+    let createdUser = null;
+    let createdDocument = null;
     try {
         logger.info('Creating a new labourer record');
-        const labourer = new Labourer(contractorData);
+        const { name, email, role, contractor } = labourData;
+        logger.info('Generating new UserId based on the details provided');
+        const userId = await generateUniqueUserId(name, email, role);
+
+        // Generate password for user
+        const password = generateSecurePassword(name, role);
+
+        logger.info('User id and password generated successfully', userId);
+
+        // Create new user
+        createdUser = await createUser({
+            userId,
+            email,
+            passwordHash: password,
+            name,
+            contactNo: labourData.contactNo,
+            role: role
+        });
+        console.log("created user", createdUser);
+
+        console.log("creating document object for labourer");
+        const documentResponse: any = await createDocuments(labourData.documents);
+        if(documentResponse.isError) {
+            logger.error('Error creating documents for labourer:', documentResponse.message);
+            throw new Error('Failed to create labourer');
+        }
+        createdDocument = documentResponse.data;
+        console.log("labour data---",labourData)
+        const labourer = new Labourer({
+            user: createdUser._id,
+            documents: documentResponse.data,
+            contractor: contractor,
+            Age: labourData.Age,
+            Gender: labourData.Gender,
+            profilePicture: labourData.profilePicture
+        });
         await labourer.save();
         logger.success(`Labourer created successfully with ID: ${labourer._id}`);
-        return labourer;
+        // Update contractor's labour count
+        await Contractor.findByIdAndUpdate(
+            contractor,
+            { $inc: { laboursCount: 1 } },
+            { new: true }
+        );
+        return {userId, password};
     } catch (error) {
         logger.error('Error creating labourer:', error);
+        // If document was created but labourer creation failed, delete the document
+        if (createdDocument) {
+            try {
+                await Documents.findByIdAndDelete(createdDocument);
+                logger.info(`Cleaned up documents ${createdDocument} after labourer creation failure`);
+            } catch (cleanupError) {
+                logger.error('Error cleaning up documents after labourer creation failure:', cleanupError);
+            }
+        }
+        // If user was created but labourer creation failed, delete the user
+        if (createdUser) {
+            try {
+                await User.findByIdAndDelete(createdUser._id);
+                logger.info(`Cleaned up user ${createdUser._id} after labourer creation failure`);
+            } catch (cleanupError) {
+                logger.error('Error cleaning up user after labourer creation failure:', cleanupError);
+            }
+        }
         throw new Error('Failed to create labourer');
     }
 };

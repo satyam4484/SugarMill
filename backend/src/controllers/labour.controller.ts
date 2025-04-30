@@ -5,10 +5,18 @@ import logger from '../utils/logger.js';
 export class LabourerController {
     static async create(req: Request, res: Response): Promise<Response> {
         try {
-            const contractorData = req.body;
-            const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-            console.log("files",files)
-            const labourer = await LabourRepository.createLabour(contractorData);
+            const LabourerData = req.body;
+            const files = req.files as Express.Multer.File[];
+            if (!files || files.length === 0) {
+                return res.status(400).json({ message: 'No files uploaded' });
+            }else if(files.length < 3) {
+                return res.status(400).json({message:'Please Upload all valid images'});
+            }
+            LabourerData.profilePicture = files[0].path;
+            LabourerData.documents.aadhar.aadharPhoto = files[1].path;
+            LabourerData.documents.pancard.panPhoto = files[2].path;
+
+            const labourer = await LabourRepository.createLabour(LabourerData);
             return res.status(201).json(labourer);
         } catch (error) {
             logger.error('Error creating labourer:', error);

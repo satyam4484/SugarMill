@@ -6,11 +6,20 @@ export class ContractController {
     static async create(req: Request, res: Response): Promise<Response> {
         try {
             const contractData = req.body;
+            const files = req.files as Express.Multer.File[];
+            if (!files || files.length === 0) {
+                return res.status(400).json({ message: 'No files uploaded' });
+            }
+            contractData.agreement = (files[0] as any).fullPath;
+            contractData.labourers = JSON.parse(contractData.labourers)
+            contractData.Guarantor = JSON.parse(contractData.Guarantor)
+            contractData.millOwner = (req as any).mill._id;
+            console.log("final format of data---",contractData)
             const response = await ContractRepository.createContract(contractData);
             if (response.isError) {
                 return res.status(400).json(response);
             }
-            return res.status(201).json(response);
+            return res.status(201).json({});
         } catch (error) {
             logger.error('Error creating contract:', error);
             return res.status(500).json({ message: 'Failed to create contract' });
@@ -71,6 +80,34 @@ export class ContractController {
         } catch (error) {
             logger.error('Error deleting contract:', error);
             return res.status(500).json({ message: 'Error deleting contract' });
+        }
+    }
+
+    static async findAvailableLabourers(req: Request, res: Response): Promise<Response> {
+        try {
+            const { contractorId } = req.params;
+            const { startDate, endDate } = req.query;
+    
+            if (!contractorId || !startDate || !endDate) {
+                return res.status(400).json({
+                    isError: true,
+                    message: 'ContractorId, startDate, and endDate are required'
+                });
+            }
+    
+            const response = await ContractRepository.findAvailableLabourers(
+                contractorId,
+                new Date(startDate as string),
+                new Date(endDate as string)
+            );
+    
+            if (response.isError) {
+                return res.status(400).json(response);
+            }
+            return res.status(200).json(response);
+        } catch (error) {
+            logger.error('Error finding available labourers:', error);
+            return res.status(500).json({ message: 'Error finding available labourers' });
         }
     }
 }

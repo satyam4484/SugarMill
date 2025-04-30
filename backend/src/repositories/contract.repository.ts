@@ -67,12 +67,30 @@ export const getAllContracts = async (query?: any): Promise<any> => {
     };
     try {
         logger.info('Fetching all contracts');
-        const contracts = await Contract.find(query)
-            .populate('millOwner')
-            .populate('contractor')
-            .populate('labourers');
+        const contracts = await Contract.find(query).populate([
+            {
+                path: 'millOwner',
+                populate: {
+                    path: 'user',
+                    select: 'name contactNo'
+                }
+            },
+            {
+                path: 'contractor',
+                populate: {
+                    path: 'user',
+                    select: 'name contactNo'
+                }
+            }
+        ]).lean().exec();
+        
+        const contractsWithCount = contracts.map(contract => ({
+            ...contract,
+            totalLabourers: contract.labourers?.length || 0
+        }));
+
         logger.info(`Successfully fetched ${contracts.length} contracts`);
-        response.data = contracts;
+        response.data = contractsWithCount;
         response.message = 'Contracts fetched successfully';
     } catch (error) {
         logger.error('Error fetching all contracts:', error);
@@ -158,7 +176,13 @@ export const findAvailableLabourers = async (contractorId: string, startDate: Da
     try {
         logger.info('Finding available labourers');
         // 1. Find all labourers under this contractor
-        const allLabourers = await Labourer.find({ contractor: contractorId, isActive: true });
+        const allLabourers = await Labourer.find({ contractor: contractorId, isActive: true }).populate({
+            path:'user',
+            select:'name contactNo'
+        }).populate({
+            path:'documents',
+            select:'aadhar'
+        });
 
         const allLabourerIds = allLabourers.map(labourer => labourer._id);
 

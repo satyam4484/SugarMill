@@ -1,5 +1,10 @@
 import mongoose, { Document, Schema } from "mongoose";
-import { VerificationStatus } from "@/utils/constants.js";
+import { VerificationStatus } from "../utils/constants.js";
+
+export interface IGuarantor extends Document {
+    name: string;
+    contact: string;
+}
 
 // Interface for Contract
 export interface IContract extends Document {
@@ -9,8 +14,10 @@ export interface IContract extends Document {
     endDate: Date;
     additionalNotes: string;
     agreement: string;
+    advanceAmount: number;
     status: VerificationStatus;
     labourers: mongoose.Types.ObjectId[];
+    Guarantor: mongoose.Types.ObjectId[];
 }
 
 // Schema for Contract
@@ -39,6 +46,11 @@ const contractSchema = new Schema({
             message: 'End date must be after start date'
         }
     },
+    advanceAmount: {
+        type: Number,
+        required: true,
+        min: 0
+    },
     additionalNotes: {
         type: String,
         trim: true
@@ -56,6 +68,10 @@ const contractSchema = new Schema({
     labourers: [{
         type: Schema.Types.ObjectId,
         ref: 'Labourer'
+    }],
+    Guarantor: [{
+       type: Schema.Types.ObjectId,
+        ref: 'Contractor'
     }]
 }, {
     timestamps: true

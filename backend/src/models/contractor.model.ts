@@ -1,10 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { VerificationStatus } from '../utils/constants.js';
 
-export interface IGuarantor extends Document {
-    name: string;
-    contact: string;
-}
+
 
 export interface IContractor extends Document {
     user: mongoose.Types.ObjectId;
@@ -18,7 +15,7 @@ export interface IContractor extends Document {
     GST_NO: string;
     ownerName: string;
     ownerContactNo: string;
-    Guarantor: IGuarantor[];  
+    // Guarantor: IGuarantor[];  
     laboursCount:number;
 }
 

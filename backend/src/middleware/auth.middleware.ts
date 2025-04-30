@@ -3,9 +3,14 @@ import jwt from 'jsonwebtoken';
 import { ERROR_MESSAGES } from '../utils/constants.js';
 import config from '../utils/config.js';
 import User from '../models/user.model.js';
+import Mill from '../models/mill.model.js';
+import Contractor from '../models/contractor.model.js';
+import { UserRole } from '../utils/constants.js';
 
 export interface AuthRequest extends Request {
     user?: any;
+    mill?: any;
+    contractor: any;
 }
 
 export const authenticateToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -19,6 +24,11 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
         const user = await User.findOne({userId:decoded.userId});
         if (!user) {
             return res.status(401).json({ message: ERROR_MESSAGES.USER_NOT_FOUND });
+        }
+        if(user.role === UserRole.MILL_OWNER){
+            req.mill = await Mill.findOne({user:user._id})
+        }else if (user.role === UserRole.CONTRACTOR){
+            req.contractor = await Contractor.findOne({user:user._id})
         }
         req.user = user;
         next();

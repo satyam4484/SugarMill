@@ -6,6 +6,9 @@ import millRoutes from './mill.routes.js'
 import customerRoutes from './customer.routes.js'
 import documentRoutes from './document.routes.js';
 import userRoutes from './user.routes.js';
+import contractRouter from './contract.routes.js';
+
+
 const router = Router();
 
 router.use('/auth', authRoutes);
@@ -15,5 +18,6 @@ router.use('/labour',labourRoutes)
 router.use('/mill',millRoutes)
 router.use('/customers',customerRoutes)
 router.use('/documents',documentRoutes)
+router.use('/contracts',contractRouter)
 
 export default router;

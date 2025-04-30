@@ -37,7 +37,7 @@ const LabourerSchema = new Schema({
     },
     contractor:{
         type: Schema.Types.ObjectId,
-        ref: 'User',
+        ref: 'Contractor',
         required: true
     },
     Age: {

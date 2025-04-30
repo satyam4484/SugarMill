@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import logger from '../utils/logger.js';
 
 // Get the directory name equivalent to __dirname in CommonJS
 const __filename = fileURLToPath(import.meta.url);
@@ -68,8 +69,7 @@ const documentSchema = new Schema({
 documentSchema.index({ 'aadhar.aadharNumber': 1 }, { unique: true });
 documentSchema.index({ 'pancard.panNumber': 1 }, { unique: true });
 
-// Add pre-remove hook to delete files when document is deleted
-// documentSchema.pre(['remove', 'deleteOne'], async function(next) {
+// documentSchema.pre(['remove', 'deleteOne', 'findOneAndDelete'] as any, async function(next) {
 //     try {
 //         const document = this as IDocument;
         
@@ -98,27 +98,32 @@ documentSchema.index({ 'pancard.panNumber': 1 }, { unique: true });
 //     }
 // });
 
-// Also handle findOneAndDelete and findByIdAndDelete operations
-documentSchema.pre('findOneAndDelete', async function(next) {
-    try {
-        const document = await this.model.findOne(this.getFilter());
-        if (document) {
-            await document.remove();
-        }
-        next();
-    } catch (error) {
-        next(error as Error);
-    }
-});
-
-// documentSchema.pre('findByIdAndDelete', async function(next) {
+// documentSchema.pre('findOneAndDelete', async function(next) {
 //     try {
 //         const document = await this.model.findOne(this.getFilter());
 //         if (document) {
+//             // Delete aadhar photo if it exists
+//             if (document.aadhar?.aadharPhoto) {
+//                 const aadharPhotoPath = path.join(uploadsDir, document.aadhar.aadharPhoto);
+//                 if (fs.existsSync(aadharPhotoPath)) {
+//                     fs.unlinkSync(aadharPhotoPath);
+//                     logger.info(`Deleted aadhar photo: ${aadharPhotoPath}`);
+//                 }
+//             }
+            
+//             // Delete pancard photo if it exists
+//             if (document.pancard?.panPhoto) {
+//                 const panPhotoPath = path.join(uploadsDir, document.pancard.panPhoto);
+//                 if (fs.existsSync(panPhotoPath)) {
+//                     fs.unlinkSync(panPhotoPath);
+//                     logger.info(`Deleted pancard photo: ${panPhotoPath}`);
+//                 }
+//             }
 //             await document.remove();
 //         }
 //         next();
 //     } catch (error) {
+//         logger.error('Error deleting document files:', error);
 //         next(error as Error);
 //     }
 // });
