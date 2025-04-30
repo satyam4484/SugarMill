@@ -5,5 +5,6 @@ export const apiEndpoints = {
     auth:'auth',
     contractor: 'contractors',
     document: 'documents',
-    user:'users'
+    user:'users',
+    contract:'contracts'
 }

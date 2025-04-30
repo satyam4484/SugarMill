@@ -28,8 +28,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { contractors } from "@/network/agent"
+import { contractors, ContractDetails } from "@/network/agent"
 import withAuth from "@/hocs/withAuth"
+import { HTTP_STATUS_CODE } from "@/lib/contants"
+import { useRouter } from "next/navigation"
+
 
 function CreateContractPage() {
   const { toast } = useToast()
@@ -38,7 +41,8 @@ function CreateContractPage() {
   const [selectedContractor, setSelectedContractor] = useState("")
   const [additionalContractors, setAdditionalContractors] = useState<string[]>([])
   const [advanceAmount, setAdvanceAmount] = useState("")
-  const [selectedLabourers, setSelectedLabourers] = useState<typeof mockLabourers>([])
+  const [selectedLabourers, setSelectedLabourers] = useState<typeof mockLabourers>([]);
+  const [labourDetails, setLabourDetails] = useState<any[]>([]);
   const [showVerificationResult, setShowVerificationResult] = useState(false)
   const [hasConflicts, setHasConflicts] = useState(false)
   const [notes, setNotes] = useState("")
@@ -51,14 +55,16 @@ function CreateContractPage() {
   }>({})
   const [agreement, setAgreement] = useState<File | null>(null)
   const [agreementPreview, setAgreementPreview] = useState<string | null>(null)
+  const router = useRouter()
 
   const [contractorDetails, setContractorDetails] = useState<any[]>([]);
 
   const getContractorsHandler = async () => {
-    try{
+    try {
+      console.log("Fetching Contractors")
       const response: any = await contractors.getAllContractors();
       setContractorDetails(response.data);
-    }catch(error) {
+    } catch (error) {
       console.log("Error fetchging contractors")
     }
   }
@@ -66,28 +72,28 @@ function CreateContractPage() {
 
   useEffect(() => {
     getContractorsHandler();
-  },[])
+  }, [])
 
 
   // Add new function to handle additional contractors
-const handleAddAdditionalContractor = (value: string) => {
-  if (!additionalContractors.includes(value) && value !== selectedContractor) {
-    setAdditionalContractors([...additionalContractors, value])
+  const handleAddAdditionalContractor = (value: string) => {
+    if (!additionalContractors.includes(value) && value !== selectedContractor) {
+      setAdditionalContractors([...additionalContractors, value])
+    }
   }
-}
 
-const handleRemoveAdditionalContractor = (contractorId: string) => {
-  setAdditionalContractors(additionalContractors.filter(id => id !== contractorId))
-}
-
-const handleAddLabourer = (labourer: (typeof mockLabourers)[0]) => {
-  if (!selectedLabourers.find((l) => l.id === labourer.id)) {
-    setSelectedLabourers([...selectedLabourers, labourer])
+  const handleRemoveAdditionalContractor = (contractorId: string) => {
+    setAdditionalContractors(additionalContractors.filter(id => id !== contractorId))
   }
-}
+
+  const handleAddLabourer = (labourer: any) => {
+    if (!selectedLabourers.find((l: any) => l._id === labourer._id)) {
+      setSelectedLabourers([...selectedLabourers, labourer])
+    }
+  }
 
   const handleRemoveLabourer = (id: string) => {
-    setSelectedLabourers(selectedLabourers.filter((l) => l.id !== id))
+    setSelectedLabourers(selectedLabourers.filter((l: any) => l._id !== id))
   }
 
   const handleVerify = () => {
@@ -103,78 +109,120 @@ const handleAddLabourer = (labourer: (typeof mockLabourers)[0]) => {
     })
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const newErrors: typeof errors = {};
-
+  
     if (!selectedContractor) {
       newErrors.contractor = "Please select a contractor";
     }
-
+  
     if (!startDate || !endDate) {
       newErrors.dates = "Please select both start and end dates";
     } else if (startDate >= endDate) {
       newErrors.dates = "Start date must be before end date";
     }
-
+  
     if (!advanceAmount) {
       newErrors.advance = "Please enter an advance amount";
     }
-
+  
     if (!agreement) {
       newErrors.agreement = "Please upload an agreement file";
     }
-
+  
     setErrors(newErrors);
-
+  
     if (Object.keys(newErrors).length === 0) {
-      toast({
-        title: "Contract Created",
-        description: "Your contract has been created successfully.",
-      })
+      try {
+        const formData = new FormData();
+        formData.append('contractor', selectedContractor);
+        formData.append('startDate', startDate?.toISOString() || '');
+        formData.append('endDate', endDate?.toISOString() || '');
+        formData.append('additionalNotes', notes);
+        if (agreement) {
+          // Append the file with the correct field name and filename
+          formData.append('files', agreement);
+        }
+        formData.append('advanceAmount', advanceAmount);
+        
+        // Convert labourers array to JSON string
+        const labourerIds = selectedLabourers.map((labourer: any) => labourer._id);
+        formData.append('labourers', JSON.stringify(labourerIds));
+
+        // Add additional contractors if any
+        if (additionalContractors.length > 0) {
+          formData.append('Guarantor', JSON.stringify(additionalContractors));
+        }
+
+        // For debugging - log the form data entries
+        for (let [key, value] of formData.entries()) {
+          console.log(`${key}:`, value);
+        }
+
+        const response = await ContractDetails.createContract(formData);
+        
+        if (response.status === HTTP_STATUS_CODE.CREATED) {
+          toast({
+            title: "Success",
+            description: "Contract created successfully",
+          });
+          router.push('/mill-owner/contracts/active');
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to create contract",
+          variant: 'destructive'
+        });
+      }
     }
-  }
-
-
-const handleAgreementChange = (file: File | null) => {
-  if (!file) {
-    setAgreement(null);
-    setAgreementPreview(null);
-    return;
-  }
-
-  // Validate file type
-  if (file.type !== 'application/pdf') {
-    setErrors(prev => ({ ...prev, agreement: "Only PDF files are allowed" }));
-    return;
-  }
-
-  // Validate file size (5MB = 5 * 1024 * 1024 bytes)
-  if (file.size > 5 * 1024 * 1024) {
-    setErrors(prev => ({ ...prev, agreement: "File size should not exceed 5MB" }));
-    return;
-  }
-
-  setErrors(prev => ({ ...prev, agreement: undefined }));
-  setAgreement(file);
+  };
   
-  // Revoke previous preview URL to prevent memory leaks
-  if (agreementPreview) {
-    URL.revokeObjectURL(agreementPreview);
+  const handleAgreementChange = (file: File | null) => {
+    if (!file) {
+      setAgreement(null);
+      setAgreementPreview(null);
+      return;
+    }
+
+    // Validate file type
+    if (file.type !== 'application/pdf') {
+      setErrors(prev => ({ ...prev, agreement: "Only PDF files are allowed" }));
+      return;
+    }
+
+    // Validate file size (5MB = 5 * 1024 * 1024 bytes)
+    if (file.size > 5 * 1024 * 1024) {
+      setErrors(prev => ({ ...prev, agreement: "File size should not exceed 5MB" }));
+      return;
+    }
+
+    setErrors(prev => ({ ...prev, agreement: undefined }));
+    setAgreement(file);
+
+    // Revoke previous preview URL to prevent memory leaks
+    if (agreementPreview) {
+      URL.revokeObjectURL(agreementPreview);
+    }
+
+    const fileUrl = URL.createObjectURL(file);
+    setAgreementPreview(fileUrl);
   }
-  
-  const fileUrl = URL.createObjectURL(file);
-  setAgreementPreview(fileUrl);
-}
 
 
 
 
-  const validateDatesBeforeAddingLabourers = () => {
-    if(!selectedContractor)  {
+  // Add loading state
+  const [isLoadingLabours, setIsLoadingLabours] = useState(false);
+
+  // Fix the validation function
+  const validateDatesBeforeAddingLabourers = async () => {
+    if (!selectedContractor) {
       setErrors(prev => ({
         ...prev,
         contractor: "Please select a contractor before adding labourers"
-      }))
+      }));
+      return false;
     }
     if (!startDate || !endDate) {
       setErrors(prev => ({
@@ -191,11 +239,33 @@ const handleAgreementChange = (file: File | null) => {
       }));
       return false;
     }
-    setErrors(prev => ({ ...prev, dates: undefined }));
-    return true;
-  }
 
-  console.log("contractor details--",contractorDetails)
+    setIsLoadingLabours(true);
+    try {
+      const response = await ContractDetails.getAvailableLabours({
+        contractorId: selectedContractor,
+        startDate,
+        endDate
+      });
+      if (response.status === HTTP_STATUS_CODE.OK) {
+        console.log("labour details--",response.data?.data);
+        setLabourDetails(response.data?.data);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      toast({
+        title: "Failed To Fetch Labour Details",
+        description: "Labours Details Not Found",
+        variant: 'destructive'
+      });
+      return false;
+    } finally {
+      setIsLoadingLabours(false);
+    }
+  };
+
+
 
   return (
     <DashboardLayout role="mill-owner">
@@ -228,8 +298,8 @@ const handleAgreementChange = (file: File | null) => {
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px]">
                     <div className="px-3 py-2 sticky top-0 bg-background z-10">
-                      <Input 
-                        placeholder="Search contractor..." 
+                      <Input
+                        placeholder="Search contractor..."
                         className="h-9"
                         onClick={(e) => e.stopPropagation()}
                         onKeyDown={(e) => e.stopPropagation()}
@@ -248,8 +318,8 @@ const handleAgreementChange = (file: File | null) => {
                       />
                     </div>
                     {contractorDetails && contractorDetails.map((contractor) => (
-                      <SelectItem 
-                        key={contractor._id} 
+                      <SelectItem
+                        key={contractor._id}
                         value={contractor._id}
                         data-contractor-item
                       >
@@ -270,8 +340,8 @@ const handleAgreementChange = (file: File | null) => {
                   </SelectTrigger>
                   <SelectContent className="max-h-[300px]">
                     <div className="px-3 py-2 sticky top-0 bg-background z-10">
-                      <Input 
-                        placeholder="Search contractor..." 
+                      <Input
+                        placeholder="Search contractor..."
                         className="h-9"
                         onClick={(e) => e.stopPropagation()}
                         onKeyDown={(e) => e.stopPropagation()}
@@ -290,17 +360,17 @@ const handleAgreementChange = (file: File | null) => {
                       />
                     </div>
                     {contractorDetails
-                      .filter(contractor => 
-                        contractor._id !== selectedContractor && 
+                      .filter(contractor =>
+                        contractor._id !== selectedContractor &&
                         !additionalContractors.includes(contractor._id)
                       )
                       .map(contractor => (
-                        <SelectItem 
-                          key={contractor._id} 
+                        <SelectItem
+                          key={contractor._id}
                           value={contractor._id}
                           data-additional-contractor-item
                         >
-                          {contractor.user.name} (ID: {contractor.user.userId})
+                          {contractor.user.name} ({contractor?.laboursCount} Labours)
                         </SelectItem>
                       ))
                     }
@@ -312,8 +382,8 @@ const handleAgreementChange = (file: File | null) => {
                   {additionalContractors.map(contractorId => {
                     const contractor = contractorDetails.find(c => c._id === contractorId);
                     return (
-                      <div 
-                        key={contractorId} 
+                      <div
+                        key={contractorId}
                         className="inline-flex items-center gap-2 bg-secondary/20 px-3 py-1.5 rounded-full text-sm"
                       >
                         <Avatar className="h-5 w-5">
@@ -403,9 +473,9 @@ const handleAgreementChange = (file: File | null) => {
 
               <div className="space-y-2">
                 <Label htmlFor="notes">Additional Notes</Label>
-                <Textarea 
-                  id="notes" 
-                  placeholder="Enter any additional notes or terms" 
+                <Textarea
+                  id="notes"
+                  placeholder="Enter any additional notes or terms"
                   className="min-h-[100px]"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -414,7 +484,7 @@ const handleAgreementChange = (file: File | null) => {
 
               <div className="space-y-2">
                 <Label>Upload Agreement</Label>
-                <div 
+                <div
                   className={cn(
                     "border-2 border-dashed rounded-lg p-6",
                     errors.agreement ? "border-red-500" : ""
@@ -438,8 +508,8 @@ const handleAgreementChange = (file: File | null) => {
                     onChange={(e) => handleAgreementChange(e.target.files?.[0] || null)}
                   />
                   {!agreement ? (
-                    <label 
-                      htmlFor="agreement-upload" 
+                    <label
+                      htmlFor="agreement-upload"
                       className="flex flex-col items-center justify-center cursor-pointer"
                     >
                       <FileUp className="h-8 w-8 text-muted-foreground mb-2" />
@@ -500,9 +570,10 @@ const handleAgreementChange = (file: File | null) => {
                 </div>
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button onClick={(e) => {
+                    <Button onClick={async (e) => {
                       e.preventDefault();
-                      if (validateDatesBeforeAddingLabourers()) {
+                      const isValid = await validateDatesBeforeAddingLabourers();
+                      if (isValid) {
                         setDialogOpen(true);
                       }
                     }}>
@@ -518,60 +589,70 @@ const handleAgreementChange = (file: File | null) => {
                       </DialogDescription>
                     </DialogHeader>
                     <div className="max-h-[400px] overflow-y-auto">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Aadhar</TableHead>
-                            <TableHead>Verified</TableHead>
-                            <TableHead className="text-right">Action</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {mockLabourers
-                            .filter((l) => !selectedLabourers.find((sl) => sl.id === l.id))
-                            .map((labourer) => (
-                              <TableRow key={labourer.id}>
-                                <TableCell>
-                                  <div className="flex items-center gap-2">
-                                    <Avatar className="h-8 w-8">
-                                      <AvatarImage src={labourer.photoUrl || "/placeholder.svg"} alt={labourer.name} />
-                                      <AvatarFallback>{labourer.name.charAt(0)}</AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                      <p className="font-medium">{labourer.name}</p>
-                                      <p className="text-xs text-muted-foreground">{labourer.phone}</p>
+                      {isLoadingLabours ? (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        </div>
+                      ) : labourDetails.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">
+                          No available labourers found for the selected dates
+                        </div>
+                      ) : (
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Name</TableHead>
+                              <TableHead>Aadhar</TableHead>
+                              <TableHead>Verified</TableHead>
+                              <TableHead className="text-right">Action</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {labourDetails
+                              .filter((l: any) => !selectedLabourers.find((sl: any) => sl._id === l._id))
+                              .map((labourer) => (
+                                <TableRow key={labourer._id}>
+                                  <TableCell>
+                                    <div className="flex items-center gap-2">
+                                      <Avatar className="h-8 w-8">
+                                        <AvatarImage src={`http://localhost:8000/${labourer.profilePicture}` || "/placeholder.jpg"} alt={labourer.user.name} />
+                                        <AvatarFallback>{labourer.user.name.charAt(0)}</AvatarFallback>
+                                      </Avatar>
+                                      <div>
+                                        <p className="font-medium">{labourer.user.name}</p>
+                                        <p className="text-xs text-muted-foreground">{labourer.user.contactNo}</p>
+                                      </div>
                                     </div>
-                                  </div>
-                                </TableCell>
-                                <TableCell>{labourer.aadharNumber}</TableCell>
-                                <TableCell>
-                                  {labourer.biometricVerified ? (
-                                    <Badge
-                                      variant="outline"
-                                      className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                                    >
-                                      <CheckCircle className="mr-1 h-3 w-3" />
-                                      Verified
-                                    </Badge>
-                                  ) : (
-                                    <Badge
-                                      variant="outline"
-                                      className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                                    >
-                                      Pending
-                                    </Badge>
-                                  )}
-                                </TableCell>
-                                <TableCell className="text-right">
-                                  <Button size="sm" onClick={() => handleAddLabourer(labourer)}>
-                                    Add
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                        </TableBody>
-                      </Table>
+                                  </TableCell>
+                                  <TableCell>{labourer.documents.aadhar.aadharNumber}</TableCell>
+                                  <TableCell>
+                                    {labourer.verificationStatus==='APPROVED' ? (
+                                      <Badge
+                                        variant="outline"
+                                        className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                                      >
+                                        <CheckCircle className="mr-1 h-3 w-3" />
+                                        Verified
+                                      </Badge>
+                                    ) : (
+                                      <Badge
+                                        variant="outline"
+                                        className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                                      >
+                                        Pending
+                                      </Badge>
+                                    )}
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <Button size="sm" onClick={() => handleAddLabourer(labourer)}>
+                                      Add
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                          </TableBody>
+                        </Table>
+                      )}
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setDialogOpen(false)}>Done</Button>
@@ -599,20 +680,20 @@ const handleAgreementChange = (file: File | null) => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {selectedLabourers.map((labourer) => (
-                        <TableRow key={labourer.id}>
+                      {selectedLabourers.map((labourer: any) => (
+                        <TableRow key={labourer._id}>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <Avatar className="h-8 w-8">
-                                <AvatarImage src={labourer.photoUrl || "/placeholder.svg"} alt={labourer.name} />
-                                <AvatarFallback>{labourer.name.charAt(0)}</AvatarFallback>
+                                <AvatarImage src={`http://localhost:8000/${labourer.profilePicture}` || "/placeholder.jpg"} alt={labourer.user.name} />
+                                <AvatarFallback>{labourer.user.name.charAt(0)}</AvatarFallback>
                               </Avatar>
-                              <span>{labourer.name}</span>
+                              <span>{labourer.user.name}</span>
                             </div>
                           </TableCell>
-                          <TableCell>{labourer.aadharNumber}</TableCell>
+                          <TableCell>{labourer.documents.aadhar.aadharNumber}</TableCell>
                           <TableCell>
-                            {labourer.biometricVerified ? (
+                            {labourer.verificationStatus ==='APPROVED'  ? (
                               <Badge
                                 variant="outline"
                                 className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
@@ -630,7 +711,7 @@ const handleAgreementChange = (file: File | null) => {
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="icon" onClick={() => handleRemoveLabourer(labourer.id)}>
+                            <Button variant="ghost" size="icon" onClick={() => handleRemoveLabourer(labourer._id)}>
                               <Trash className="h-4 w-4" />
                               <span className="sr-only">Remove</span>
                             </Button>
@@ -718,7 +799,7 @@ const handleAgreementChange = (file: File | null) => {
                       <h4 className="text-sm font-medium text-muted-foreground mb-1">Contractor</h4>
                       <p>
                         {selectedContractor
-                          ? mockContractors.find((c) => c.id === selectedContractor)?.name
+                          ? contractorDetails.find((c: any) => c._id === selectedContractor).user.name
                           : "Not selected"}
                       </p>
                     </div>

@@ -17,27 +17,44 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { AlertTriangle, CheckCircle, Eye, FileCheck, FileText, Search, X } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import withAuth from "@/hocs/withAuth"
+import { ContractDetails } from "@/network/agent"
+import { HTTP_STATUS_CODE } from "@/lib/contants"
 
 function AdminContractsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [selectedContract, setSelectedContract] = useState<(typeof mockContracts)[0] | null>(null)
+  const [selectedContract, setSelectedContract] = useState<any[]>([]);
 
   // Filter contracts based on search term and status
-  const filteredContracts = mockContracts.filter((contract) => {
+  const filteredContracts = selectedContract.filter((contract) => {
     const matchesSearch =
-      contract.millOwnerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract.contractorName.toLowerCase().includes(searchTerm.toLowerCase())
+      contract.millOwner.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contract.contractor?.user?.name.toLowerCase().includes(searchTerm.toLowerCase())
 
     const matchesStatus = statusFilter === "all" || contract.status === statusFilter
 
     return matchesSearch && matchesStatus
   })
+  const getAllContractsHandler = async () => {
+    try {
+      const response = await ContractDetails.getAllContract();
+      if(response.status === HTTP_STATUS_CODE.OK){
+        console.log("response", response.data)
+        setSelectedContract(response.data.data);
+      }
+    } catch (error) {
+      console.log("error", error)
+    }
+  }
+
+  useEffect(() => {
+    getAllContractsHandler();
+  },[])
 
   // Contracts with conflicts
   const conflictContracts = filteredContracts.filter((contract) => contract.conflicts)
@@ -113,25 +130,25 @@ function AdminContractsPage() {
                         <TableHead>Advance</TableHead>
                         <TableHead>Labourers</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Conflict</TableHead>
+                        {/* <TableHead>Conflict</TableHead>  */}
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredContracts.map((contract) => (
-                        <TableRow key={contract.id}>
-                          <TableCell>{contract.millOwnerName}</TableCell>
-                          <TableCell>{contract.contractorName}</TableCell>
+                      {filteredContracts.length > 0 && filteredContracts.map((contract: any) => (
+                        <TableRow key={contract._id}>
+                          <TableCell>{contract.millOwner?.name}</TableCell>
+                          <TableCell>{contract.contractor?.user?.name}</TableCell>
                           <TableCell>
-                            {formatDate(contract.startDate)} - {formatDate(contract.endDate)}
+                            {formatDate(new Date(contract.startDate).toISOString())} - {formatDate(new Date(contract.endDate).toISOString())}
                           </TableCell>
-                          <TableCell>{formatCurrency(contract.advanceAmount)}</TableCell>
+                          <TableCell>{formatCurrency(contract?.advanceAmount)}</TableCell>
                           <TableCell>{contract.totalLabourers}</TableCell>
                           <TableCell>
-                            <Badge className={getStatusColor(contract.status)}>{contract.status}</Badge>
+                            <Badge className={getStatusColor(contract?.status)}>{contract?.status}</Badge>
                           </TableCell>
-                          <TableCell>
-                            {contract.conflicts ? (
+                          {/* <TableCell>
+                            {contract?.conflicts ? (
                               <Badge
                                 variant="outline"
                                 className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
@@ -148,7 +165,7 @@ function AdminContractsPage() {
                                 Verified
                               </Badge>
                             )}
-                          </TableCell>
+                          </TableCell> */}
                           <TableCell className="text-right">
                             <Button variant="ghost" size="icon" onClick={() => setSelectedContract(contract)}>
                               <Eye className="h-4 w-4" />
@@ -191,7 +208,7 @@ function AdminContractsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {conflictContracts.map((contract) => (
+                        {conflictContracts.map((contract: any) => (
                           <TableRow key={contract.id}>
                             <TableCell>{contract.millOwnerName}</TableCell>
                             <TableCell>{contract.contractorName}</TableCell>
@@ -232,7 +249,7 @@ function AdminContractsPage() {
         </motion.div>
 
         {/* Contract Details Dialog */}
-        {selectedContract && (
+        {/* {selectedContract && (
           <Dialog open={!!selectedContract} onOpenChange={(open) => !open && setSelectedContract(null)}>
             <DialogContent className="max-w-3xl">
               <DialogHeader>
@@ -367,7 +384,7 @@ function AdminContractsPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        )}
+        )} */}
       </div>
     </DashboardLayout>
   )

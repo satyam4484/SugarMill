@@ -7,6 +7,12 @@ export const customerRequest = {
     getCustomerRequests: () => axiosClient().get(apiEndpoints.customer)
 }
 
+export const ContractDetails = {
+    getAvailableLabours: (data: any) =>  axiosClient().get(`${apiEndpoints.contract}/available-labourers/${data.contractorId}?startDate=${data.startDate}&endDate=${data.endDate}`),
+    createContract: (data: any) => axiosClient({"Content-Type": "multipart/form-data"}).post(`${apiEndpoints.contract}`,data),
+    getAllContract: (query?:any) => axiosClient().get(`${apiEndpoints.contract}?${query?query:''}`),
+}
+
 
 export const userAuth = {
     loginUser: (data: any) => axiosClient().post(`${apiEndpoints.auth}/login`, JSON.stringify(data)),
