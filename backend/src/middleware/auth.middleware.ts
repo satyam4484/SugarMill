@@ -13,7 +13,7 @@ export interface AuthRequest extends Request {
     contractor: any;
 }
 
-export const authenticateToken = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authenticateToken = async (req: any, res: Response, next: NextFunction) => {
     try {
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1];
