@@ -212,3 +212,147 @@ export const findAvailableLabourers = async (contractorId: string, startDate: Da
         return response;
     }
 };
+
+export const getContractInsights = async (millOwnerId?: string): Promise<any> => {
+    const response: any = {
+        isError: false,
+        message: '',
+    };
+    try {
+        const matchStage = millOwnerId ? { millOwner: new mongoose.Types.ObjectId(millOwnerId) } : {};
+        const currentDate = new Date();
+        const lastMonthDate = new Date(currentDate.setMonth(currentDate.getMonth() - 1));
+        const lastSeasonDate = new Date(currentDate.setMonth(currentDate.getMonth() - 12));
+
+        const insights = await Contract.aggregate([
+            { $match: matchStage },
+            {
+                $facet: {
+                    'contractStats': [
+                        {
+                            $group: {
+                                _id: null,
+                                totalContracts: { $sum: 1 },
+                                activeContracts: {
+                                    $sum: { $cond: [{ $eq: ["$status", "active"] }, 1, 0] }
+                                },
+                                totalAdvanceAmount: { $sum: "$advanceAmount" },
+                                lastSeasonAdvanceAmount: {
+                                    $sum: {
+                                        $cond: [
+                                            { $gte: ["$createdAt", lastSeasonDate] },
+                                            "$advanceAmount",
+                                            0
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    'labourerStats': [
+                        {
+                            $group: {
+                                _id: null,
+                                totalLabourers: { $sum: { $size: "$labourers" } },
+                                lastMonthLabourers: {
+                                    $sum: {
+                                        $cond: [
+                                            { $gte: ["$createdAt", lastMonthDate] },
+                                            { $size: "$labourers" },
+                                            0
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    'conflictStats': [
+                        {
+                            $lookup: {
+                                from: 'contracts',
+                                let: { contractLabourers: "$labourers", startDate: "$startDate", endDate: "$endDate" },
+                                pipeline: [
+                                    {
+                                        $match: {
+                                            $expr: {
+                                                $and: [
+                                                    { $ne: ["$_id", "$$_id"] },
+                                                    { $lte: ["$startDate", "$$endDate"] },
+                                                    { $gte: ["$endDate", "$$startDate"] },
+                                                    {
+                                                        $gt: [
+                                                            { $size: { $setIntersection: ["$labourers", "$$contractLabourers"] } },
+                                                            0
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                ],
+                                as: 'conflicts'
+                            }
+                        },
+                        {
+                            $group: {
+                                _id: null,
+                                totalConflicts: { $sum: { $size: "$conflicts" } },
+                                newConflicts: {
+                                    $sum: {
+                                        $cond: [
+                                            { $gte: ["$createdAt", lastMonthDate] },
+                                            { $size: "$conflicts" },
+                                            0
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $project: {
+                    totalContracts: { $arrayElemAt: ["$contractStats.totalContracts", 0] },
+                    activeContracts: { $arrayElemAt: ["$contractStats.activeContracts", 0] },
+                    totalLabourers: { $arrayElemAt: ["$labourerStats.totalLabourers", 0] },
+                    newLabourers: { $arrayElemAt: ["$labourerStats.lastMonthLabourers", 0] },
+                    totalConflicts: { $arrayElemAt: ["$conflictStats.totalConflicts", 0] },
+                    newConflicts: { $arrayElemAt: ["$conflictStats.newConflicts", 0] },
+                    totalAdvanceAmount: { $arrayElemAt: ["$contractStats.totalAdvanceAmount", 0] },
+                    advanceAmountGrowth: {
+                        $multiply: [
+                            {
+                                $divide: [
+                                    { $subtract: [
+                                        { $arrayElemAt: ["$contractStats.totalAdvanceAmount", 0] },
+                                        { $arrayElemAt: ["$contractStats.lastSeasonAdvanceAmount", 0] }
+                                    ]},
+                                    { $arrayElemAt: ["$contractStats.lastSeasonAdvanceAmount", 0] }
+                                ]
+                            },
+                            100
+                        ]
+                    }
+                }
+            }
+        ]);
+
+        response.data = insights[0] || {
+            totalContracts: 0,
+            activeContracts: 0,
+            totalLabourers: 0,
+            newLabourers: 0,
+            totalConflicts: 0,
+            newConflicts: 0,
+            totalAdvanceAmount: 0,
+            advanceAmountGrowth: 0
+        };
+        response.message = 'Contract insights fetched successfully';
+    } catch (error) {
+        logger.error('Error fetching contract insights:', error);
+        response.isError = true;
+        response.message = 'Error fetching contract insights';
+    }
+    return response;
+};

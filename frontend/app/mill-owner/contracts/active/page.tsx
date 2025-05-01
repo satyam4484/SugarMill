@@ -29,6 +29,7 @@ function AdminContractsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [selectedContract, setSelectedContract] = useState<any[]>([]);
+  const [viewContractDetails,setViewContractDetails] = useState<any>(null);
 
   // Filter contracts based on search term and status
   const filteredContracts = selectedContract.filter((contract) => {
@@ -104,10 +105,10 @@ function AdminContractsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="ACTIVE">Active</SelectItem>
+                    <SelectItem value="PENDING">Pending</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="rejected">Rejected</SelectItem>
+                    <SelectItem value="REJECTED">Rejected</SelectItem>
                     <SelectItem value="expired">Expired</SelectItem>
                   </SelectContent>
                 </Select>
@@ -167,7 +168,7 @@ function AdminContractsPage() {
                             )}
                           </TableCell> */}
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="icon" onClick={() => setSelectedContract(contract)}>
+                            <Button variant="ghost" size="icon" onClick={() => setViewContractDetails(contract)}>
                               <Eye className="h-4 w-4" />
                               <span className="sr-only">View</span>
                             </Button>
@@ -249,14 +250,14 @@ function AdminContractsPage() {
         </motion.div>
 
         {/* Contract Details Dialog */}
-        {/* {selectedContract && (
-          <Dialog open={!!selectedContract} onOpenChange={(open) => !open && setSelectedContract(null)}>
+        {viewContractDetails && (
+          <Dialog open={!!viewContractDetails} onOpenChange={(open) => !open && setViewContractDetails(null)}>
             <DialogContent className="max-w-3xl">
               <DialogHeader>
                 <DialogTitle>Contract Details</DialogTitle>
                 <DialogDescription>
-                  Contract #{selectedContract.id} between {selectedContract.millOwnerName} and{" "}
-                  {selectedContract.contractorName}
+                  Contract #{viewContractDetails._id} between {viewContractDetails.millOwner?.name} and{" "}
+                  {viewContractDetails.contractor?.user?.name}
                 </DialogDescription>
               </DialogHeader>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -265,41 +266,41 @@ function AdminContractsPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Mill Owner:</span>
-                      <span className="font-medium">{selectedContract.millOwnerName}</span>
+                      <span className="font-medium">{viewContractDetails.millOwner?.name}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Contractor:</span>
-                      <span className="font-medium">{selectedContract.contractorName}</span>
+                      <span className="font-medium">{viewContractDetails.contractor?.user?.name}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Start Date:</span>
-                      <span className="font-medium">{formatDate(selectedContract.startDate)}</span>
+                      <span className="font-medium">{formatDate(new Date(viewContractDetails.startDate).toISOString())}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">End Date:</span>
-                      <span className="font-medium">{formatDate(selectedContract.endDate)}</span>
+                      <span className="font-medium">{formatDate(new Date(viewContractDetails.endDate).toISOString())}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Advance Amount:</span>
-                      <span className="font-medium">{formatCurrency(selectedContract.advanceAmount)}</span>
+                      <span className="font-medium">{formatCurrency(viewContractDetails.advanceAmount)}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Total Labourers:</span>
-                      <span className="font-medium">{selectedContract.totalLabourers}</span>
+                      <span className="font-medium">{viewContractDetails.totalLabourers}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Status:</span>
-                      <Badge className={getStatusColor(selectedContract.status)}>{selectedContract.status}</Badge>
+                      <Badge className={getStatusColor(viewContractDetails.status)}>{viewContractDetails.status}</Badge>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Created On:</span>
-                      <span className="font-medium">{formatDate(selectedContract.createdAt)}</span>
+                      <span className="font-medium">{formatDate(viewContractDetails.createdAt)}</span>
                     </div>
                   </div>
                 </div>
                 <div>
                   <h3 className="text-lg font-medium mb-2">Verification Status</h3>
-                  {selectedContract.conflicts ? (
+                  {viewContractDetails.conflicts ? (
                     <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
                       <div className="flex items-center gap-2 mb-2">
                         <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
@@ -335,7 +336,7 @@ function AdminContractsPage() {
                       <div className="space-y-2">
                         <div className="flex justify-between text-sm">
                           <span>Verified On:</span>
-                          <span className="font-medium">April 15, 2024</span>
+                          <span className="font-medium">{formatDate(new Date(viewContractDetails.createdAt).toISOString())}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span>Verified By:</span>
@@ -360,7 +361,7 @@ function AdminContractsPage() {
                 </div>
               </div>
               <DialogFooter className="flex flex-col sm:flex-row gap-2">
-                {selectedContract.conflicts ? (
+                {viewContractDetails.conflicts ? (
                   <>
                     <Button variant="outline" className="sm:mr-auto">
                       <Eye className="mr-2 h-4 w-4" />
@@ -376,7 +377,7 @@ function AdminContractsPage() {
                     </Button>
                   </>
                 ) : (
-                  <Button className="sm:ml-auto">
+                  <Button className="sm:ml-auto" onClick={() => setViewContractDetails(null)}> 
                     <CheckCircle className="mr-2 h-4 w-4" />
                     Close
                   </Button>
@@ -384,7 +385,7 @@ function AdminContractsPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        )} */}
+        )}
       </div>
     </DashboardLayout>
   )
