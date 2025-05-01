@@ -16,6 +16,7 @@ import { useEffect, useState } from "react"
 import { contractors } from "@/network/agent"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
+import { ContractDetails } from "@/network/agent"
 
 function MillOwnerDashboardPage() {
   // Sample data for charts
@@ -31,6 +32,8 @@ function MillOwnerDashboardPage() {
       },
     ],
   }
+
+  const [activeContracts,setActiveContracts] = useState<any[]>([]);
   
   const router =useRouter();
   const { toast } = useToast()
@@ -55,8 +58,24 @@ function MillOwnerDashboardPage() {
     }
   }
 
+  const getActiveContractsHandler = async () => {
+    try{
+      const response = await ContractDetails.getAllContract('limit=2');
+      setActiveContracts(response.data.data);
+    }catch(error){
+      console.log("error fetching..")
+      toast({
+        title: "Error",
+        description: "Failed to load contractor details. Please try again.",
+        variant: "destructive"
+      })
+    }
+  }
+
   useEffect(() => {
     getContractorsHanlder();
+    getActiveContractsHandler();
+
   },[])
 
   return (
@@ -277,9 +296,9 @@ function MillOwnerDashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {millOwnerContracts.map((contract) => (
+                    {activeContracts.map((contract: any) => (
                       <div
-                        key={contract.id}
+                        key={contract._id}
                         className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
                       >
                         <div className="flex items-center gap-4">
@@ -287,9 +306,9 @@ function MillOwnerDashboardPage() {
                             <FileCheck className="h-5 w-5 text-primary" />
                           </div>
                           <div>
-                            <p className="font-medium">Contract with {contract.contractorName}</p>
+                            <p className="font-medium">Contract with {contract.contractor?.user?.name}</p>
                             <p className="text-sm text-muted-foreground">
-                              {formatDate(contract.startDate)} - {formatDate(contract.endDate)}
+                            {formatDate(new Date(contract.startDate).toISOString())} - {formatDate(new Date(contract.endDate).toISOString())}
                             </p>
                           </div>
                         </div>

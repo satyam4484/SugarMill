@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import { motion } from "framer-motion"
 import { useEffect, useState } from "react"
-import { AlertTriangle, CheckCircle, Eye, FileCheck, FileText, Search, X } from "lucide-react"
+import { AlertTriangle, CheckCircle, Eye, FileCheck, FileText, Pencil, Search, X } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import withAuth from "@/hocs/withAuth"
@@ -52,6 +52,7 @@ function AdminContractsPage() {
       console.log("error", error)
     }
   }
+  
 
   useEffect(() => {
     getAllContractsHandler();
@@ -108,8 +109,7 @@ function AdminContractsPage() {
                     <SelectItem value="ACTIVE">Active</SelectItem>
                     <SelectItem value="PENDING">Pending</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="REJECTED">Rejected</SelectItem>
-                    <SelectItem value="expired">Expired</SelectItem>
+                    {/* <SelectItem value="expired">Expired</SelectItem> */}
                   </SelectContent>
                 </Select>
               </div>
@@ -168,10 +168,16 @@ function AdminContractsPage() {
                             )}
                           </TableCell> */}
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="icon" onClick={() => setViewContractDetails(contract)}>
-                              <Eye className="h-4 w-4" />
-                              <span className="sr-only">View</span>
-                            </Button>
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="icon" onClick={() => setViewContractDetails(contract)}>
+                                <Eye className="h-4 w-4" />
+                                <span className="sr-only">View</span>
+                              </Button>
+                              {/* <Button variant="ghost" size="icon" onClick={() => handleEditContract(contract)}>
+                                <Pencil className="h-4 w-4" />
+                                <span className="sr-only">Edit</span>
+                              </Button> */}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}

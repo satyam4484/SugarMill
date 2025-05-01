@@ -10,7 +10,7 @@ export interface IGuarantor extends Document {
 export interface IContract extends Document {
     millOwner: mongoose.Types.ObjectId;
     contractor: mongoose.Types.ObjectId;
-    startDate: Date;
+    startDate: Date;    
     endDate: Date;
     additionalNotes: string;
     agreement: string;

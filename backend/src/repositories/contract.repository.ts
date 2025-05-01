@@ -67,7 +67,7 @@ export const getAllContracts = async (query?: any): Promise<any> => {
     };
     try {
         logger.info('Fetching all contracts');
-        const contracts = await Contract.find(query).populate([
+        const contracts = await Contract.find().populate([
             {
                 path: 'millOwner',
                 populate: {
@@ -90,7 +90,11 @@ export const getAllContracts = async (query?: any): Promise<any> => {
         }));
 
         logger.info(`Successfully fetched ${contracts.length} contracts`);
-        response.data = contractsWithCount;
+        let length = contractsWithCount.length;
+        if(query?.limit){
+            length = parseInt(query.limit);
+        }
+        response.data = contractsWithCount.slice(0,length);
         response.message = 'Contracts fetched successfully';
     } catch (error) {
         logger.error('Error fetching all contracts:', error);
