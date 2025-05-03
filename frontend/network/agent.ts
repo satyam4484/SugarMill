@@ -28,7 +28,7 @@ export const labourers = {
     getAllLabours : (query?:any) => axiosClient().get(`${apiEndpoints.labourers}?${query?query:''}`),
     createLabourer: (data: any) => axiosClient({"Content-Type": "multipart/form-data"}).post(`${apiEndpoints.labourers}?folder=labourer`,data ),
     getLabourById:(id:string) => axiosClient().get(`${apiEndpoints.labourers}/${id}`),
-    updateLabourer:(id: string,data: any) => axiosClient().patch(`${apiEndpoints.labourers}`)
+    updateLabourer:(id: string,data: any) => axiosClient({"Content-Type": "multipart/form-data"}).put(`${apiEndpoints.labourers}/${id}`,data)
 }
 
 export const documents = {

@@ -6,7 +6,6 @@ export class LabourerController {
     static async create(req: any, res: Response): Promise<Response> {
         try {
             const LabourerData = req.body;
-            console.log("labourere data--",LabourerData)
             const files = req.files as Express.Multer.File[];
             if (!files || files.length === 0) {
                 return res.status(400).json({ message: 'No files uploaded' });
@@ -60,6 +59,33 @@ export class LabourerController {
         try {
             const { id } = req.params;
             const updateData = req.body;
+            const files = req.files as Express.Multer.File[];
+    
+            if (files && files.length > 0) {
+                // Filter and process files based on originalname
+                const profileFile = files.find(file => file.originalname.toLowerCase().includes('profile'));
+                const aadharFile = files.find(file => file.originalname.toLowerCase().includes('aadhar'));
+                const panFile = files.find(file => file.originalname.toLowerCase().includes('pancard'));
+    
+                if (profileFile) {
+                    updateData.profilePicture = profileFile.path;
+                }
+    
+                if (aadharFile) {
+                    if (!updateData.documents) updateData.documents = {};
+                    if (!updateData.documents.aadhar) updateData.documents.aadhar = {};
+                    updateData.documents.aadhar.aadharPhoto = aadharFile.path;
+                }
+    
+                if (panFile) {
+                    if (!updateData.documents) updateData.documents = {};
+                    if (!updateData.documents.pancard) updateData.documents.pancard = {};
+                    updateData.documents.pancard.panPhoto = panFile.path;
+                }
+            }
+
+            console.log("final data==",updateData);
+            
             const labourer = await LabourRepository.updateLabourer(id, updateData);
             if (!labourer) {
                 return res.status(404).json({ message: 'labourer not found' });

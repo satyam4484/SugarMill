@@ -33,7 +33,8 @@ function EditLabourerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const [isLoading, setIsLoading] = useState(true)
   const [errors, setErrors] = useState<FormErrors>({})
-  const [formData, setFormData] = useState<any>(null)
+  const [formData, setFormData] = useState<any>(null);
+  const [originalData,setOriginalData] = useState<any>(null);
 
   const aadharFileRef = useRef<HTMLInputElement>(null)
   const panFileRef = useRef<HTMLInputElement>(null)
@@ -46,6 +47,7 @@ function EditLabourerPage({ params }: { params: Promise<{ id: string }> }) {
       const response = await labourers.getLabourById(id)
       if (response.status === HTTP_STATUS_CODE.OK) {
         setFormData(response.data)
+        setOriginalData(response.data)
       } else {
         setFormData(null)
         toast({
@@ -134,7 +136,7 @@ function EditLabourerPage({ params }: { params: Promise<{ id: string }> }) {
           }
         }))
       } else if (type === 'pancard') {
-        setFormData((prev: any) => ({
+        setFormData((prev: any) =>  ({
           ...prev,
           documents: {
             ...prev.documents,
@@ -154,24 +156,100 @@ function EditLabourerPage({ params }: { params: Promise<{ id: string }> }) {
   const handleUpdate = async () => {
     setIsLoading(true)
     try {
-      const response = await labourers.updateLabourer(id, formData)
-      if (response.status === HTTP_STATUS_CODE.OK) {
-        toast({
-          title: "Success",
-          description: "Labourer details updated successfully"
-        })
-        router.push(`/contractor/team/${id}`)
-      }
+        const formDataObj = new FormData()
+        let hasChanges = false
+        
+        // Compare and append only changed user details
+        if (formData.user.name !== originalData.user.name) {
+            formDataObj.append('user[name]', formData.user.name)
+            hasChanges = true
+        }
+        if (formData.user.email !== originalData.user.email) {
+            formDataObj.append('user[email]', formData.user.email)
+            hasChanges = true
+        }
+        if (formData.user.contactNo !== originalData.user.contactNo) {
+            formDataObj.append('user[contactNo]', formData.user.contactNo)
+            hasChanges = true
+        }
+    
+        // Compare and append only changed document details
+        if (formData.documents.aadhar.aadharNumber !== originalData.documents.aadhar.aadharNumber) {
+            formDataObj.append('documents[aadhar][aadharNumber]', formData.documents.aadhar.aadharNumber)
+            hasChanges = true
+        }
+        if (formData.documents.pancard.panNumber !== originalData.documents.pancard.panNumber) {
+            formDataObj.append('documents[pancard][panNumber]', formData.documents.pancard.panNumber)
+            hasChanges = true
+        }
+    
+        // Compare and append only changed basic details
+        if (formData.Age !== originalData.Age) {
+            formDataObj.append('Age', formData.Age)
+            hasChanges = true
+        }
+        if (formData.Gender !== originalData.Gender) {
+            formDataObj.append('Gender', formData.Gender)
+            hasChanges = true
+        }
+    
+        // Handle changed files
+        if (formData.profilePicture?.startsWith('data:')) {
+            const profileFile = dataURLtoFile(formData.profilePicture, 'profile.jpg')
+            formDataObj.append('files', profileFile)
+            hasChanges = true
+        }
+        if (formData.documents.aadhar.aadharPhoto?.startsWith('data:')) {
+            const aadharFile = dataURLtoFile(formData.documents.aadhar.aadharPhoto, 'aadhar.jpg')
+            formDataObj.append('files', aadharFile)
+            hasChanges = true
+        }
+        if (formData.documents.pancard.panPhoto?.startsWith('data:')) {
+            const panFile = dataURLtoFile(formData.documents.pancard.panPhoto, 'pancard.jpg')
+            formDataObj.append('files', panFile)
+            hasChanges = true
+        }
+
+        if (!hasChanges) {
+            toast({
+                title: "No Changes",
+                description: "No changes were made to update"
+            })
+            return
+        }
+
+        const response = await labourers.updateLabourer(id, formDataObj)
+        if (response.status === HTTP_STATUS_CODE.OK) {
+            toast({
+                title: "Success",
+                description: "Labourer details updated successfully"
+            })
+            router.push(`/contractor/team/${id}`)
+        }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: (error as any)?.response?.data?.message || "Failed to update labourer",
-        variant: "destructive"
-      })
+        console.error('Update error:', error)
+        toast({
+            title: "Error",
+            description: (error as any)?.response?.data?.message || "Failed to update labourer",
+            variant: "destructive"
+        })
     } finally {
-      setIsLoading(false)
+        setIsLoading(false)
     }
-  }
+}
+
+    // Add this helper function at the bottom of the file
+    const dataURLtoFile = (dataurl: string, filename: string): File => {
+      const arr = dataurl.split(',')
+      const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg'
+      const bstr = atob(arr[1])
+      let n = bstr.length
+      const u8arr = new Uint8Array(n)
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n)
+      }
+      return new File([u8arr], filename, { type: mime })
+    }
 
   if (isLoading) {
     return (
@@ -226,6 +304,37 @@ function EditLabourerPage({ params }: { params: Promise<{ id: string }> }) {
               <CardDescription>Update basic details and contact information.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+            <div className="space-y-2">
+                <Label>Profile Photo</Label>
+                <input
+                  type="file"
+                  ref={profileFileRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => handleFileChange(e, 'profile')}
+                />
+                <div
+                  className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer"
+                  onClick={() => profileFileRef.current?.click()}
+                >
+                  {formData.profilePicture ? (
+                    <div className="relative w-32 h-32 mx-auto">
+                      <Image
+                        src={formData.profilePicture?.startsWith('data:') ? formData.profilePicture : `http://localhost:8000/${formData.profilePicture}`}
+                        alt="Profile Preview"
+                        fill
+                        className="object-cover rounded-full"
+                      />
+                    </div>
+                  ) : (
+                    <>
+                      <FileUp className="h-8 w-8 text-muted-foreground mb-2" />
+                      <p className="text-sm text-muted-foreground">Click to upload profile photo</p>
+                    </>
+                  )}
+                </div>
+              </div>
+              
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input
@@ -314,14 +423,17 @@ function EditLabourerPage({ params }: { params: Promise<{ id: string }> }) {
                   onClick={() => aadharFileRef.current?.click()}
                 >
                   {formData.documents.aadhar.aadharPhoto ? (
-                    <div className="relative w-full h-32">
+                    // Change this for both Aadhar and PAN card images
+                    <>
+                    <div className="relative w-[200px] h-[150px] mx-auto">
                       <Image
-                        src={`http://localhost:8000/${formData.documents.aadhar.aadharPhoto}`}
+                        src={formData.documents.aadhar.aadharPhoto?.startsWith('data:') ? formData.documents.aadhar.aadharPhoto : `http://localhost:8000/${formData.documents.aadhar.aadharPhoto}`}
                         alt="Aadhar Preview"
                         fill
-                        className="object-cover rounded-lg"
+                        className="object-contain rounded-lg"
                       />
                     </div>
+                    </>
                   ) : (
                     <>
                       <FileUp className="h-8 w-8 text-muted-foreground mb-2" />
@@ -355,9 +467,9 @@ function EditLabourerPage({ params }: { params: Promise<{ id: string }> }) {
                   onClick={() => panFileRef.current?.click()}
                 >
                   {formData.documents.pancard.panPhoto ? (
-                    <div className="relative w-full h-32">
+                     <div className="relative w-[200px] h-[150px] mx-auto">
                       <Image
-                        src={`http://localhost:8000/${formData.documents.pancard.panPhoto}`}
+                        src={formData.documents.pancard.panPhoto?.startsWith('data:') ? formData.documents.pancard.panPhoto : `http://localhost:8000/${formData.documents.pancard.panPhoto}`}
                         alt="PAN Preview"
                         fill
                         className="object-cover rounded-lg"
@@ -372,36 +484,7 @@ function EditLabourerPage({ params }: { params: Promise<{ id: string }> }) {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label>Profile Photo</Label>
-                <input
-                  type="file"
-                  ref={profileFileRef}
-                  className="hidden"
-                  accept="image/*"
-                  onChange={(e) => handleFileChange(e, 'profile')}
-                />
-                <div
-                  className="border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer"
-                  onClick={() => profileFileRef.current?.click()}
-                >
-                  {formData.profilePicture ? (
-                    <div className="relative w-32 h-32 mx-auto">
-                      <Image
-                        src={`http://localhost:8000/${formData.profilePicture}`}
-                        alt="Profile Preview"
-                        fill
-                        className="object-cover rounded-full"
-                      />
-                    </div>
-                  ) : (
-                    <>
-                      <FileUp className="h-8 w-8 text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground">Click to upload profile photo</p>
-                    </>
-                  )}
-                </div>
-              </div>
+              
             </CardContent>
           </Card>
         </div>

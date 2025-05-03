@@ -8,7 +8,7 @@ router.use(authenticateToken);
 router.route('/').post(uploadFiles(3),LabourerController.create);
 router.get('/:id', LabourerController.getById);
 router.get('/', LabourerController.getAll);
-router.put('/:id', LabourerController.update);
+router.route('/:id').put(uploadFiles(3), LabourerController.update);
 router.delete('/:id', LabourerController.delete);
 
 export default router;

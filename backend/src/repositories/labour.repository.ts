@@ -141,20 +141,57 @@ export const getAllLabourers = async (filter: any = {},query: any = {}): Promise
 export const updateLabourer = async (id: string, updateData: Partial<ILabourer>): Promise<ILabourer | null> => {
     try {
         logger.info(`Updating labourer with ID: ${id}`);
-         if (!mongoose.Types.ObjectId.isValid(id)) {
-             logger.warn(`Invalid labourer ID format for update: ${id}`);
-             return null;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            logger.warn(`Invalid labourer ID format for update: ${id}`);
+            return null;
         }
-        // Ensure user and documents fields are not accidentally overwritten if not provided
-        const { user, documents, ...restUpdateData } = updateData;
 
-        const labourer = await Labourer.findByIdAndUpdate(id, restUpdateData, { new: true, runValidators: true }).populate('user').populate('documents');
-        if (labourer) {
-            logger.success(`Labourer updated successfully: ${id}`);
-        } else {
+        const labourer = await Labourer.findById(id).populate('documents');
+        if (!labourer) {
             logger.warn(`Labourer with ID: ${id} not found for update`);
+            return null;
         }
-        return labourer;
+
+
+        // Handle user updates if provided
+        if (updateData.user) {
+            await User.findByIdAndUpdate(labourer.user, updateData.user);
+        }
+
+        // Handle document updates if provided
+        if (updateData.documents) {
+            const existingDoc: any = await Documents.findById(labourer.documents).lean();
+            let docs = {
+                aadhar: {
+                    aadharNumber: existingDoc.aadhar.aadharNumber,
+                    aadharPhoto: existingDoc.aadhar.aadharPhoto,
+                    ...(updateData.documents as any).aadhar
+                },
+                pancard: {
+                    panNumber: existingDoc.pancard.panNumber,
+                    panPhoto: existingDoc.pancard.panPhoto,
+                    ...(updateData.documents as any).pancard
+                }
+            }
+            console.log("doc--",docs);
+            await Documents.findByIdAndUpdate(labourer.documents, docs);
+        }
+
+        // Handle other labourer fields
+        const { user, documents, ...restUpdateData } = updateData;
+        
+        // Update labourer and get updated version
+        const updatedLabourer = await Labourer.findByIdAndUpdate(
+            id,
+            restUpdateData,
+            { new: true, runValidators: true }
+        ).populate('user').populate('documents');
+
+        if (updatedLabourer) {
+            logger.success(`Labourer updated successfully: ${id}`);
+        }
+
+        return updatedLabourer;
     } catch (error) {
         logger.error(`Error updating labourer with ID: ${id}`, error);
         throw new Error('Error updating labourer');
