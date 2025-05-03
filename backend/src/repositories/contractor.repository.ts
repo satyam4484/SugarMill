@@ -6,6 +6,8 @@ import { createUser } from './auth.repository.js';
 import User ,{ IUser } from '../models/user.model.js'
 import { createDocuments } from './document.repository.js';
 import Documents from '../models/documents.model.js';
+import Labourer from '../models/labour.model.js';
+import Contract from '../models/contract.model.js';
 
 // Create a new contractor
 export const createContractor = async (contractorData: any): Promise<{userId: string, password: string}> => {
@@ -162,4 +164,105 @@ export const deleteContractor = async (id: string): Promise<boolean> => {
         logger.error(`Error deleting contractor with ID: ${id}`, error);
         throw new Error('Error deleting contractor');
     }
+};
+
+export const getContractorDashboardStats = async (contractorId: string) => {
+    try {
+        const currentDate = new Date();
+        const lastMonthDate = new Date(currentDate.setMonth(currentDate.getMonth() - 1));
+        const lastYearDate = new Date(currentDate.setFullYear(currentDate.getFullYear() - 1));
+
+        // Get labourers stats
+        const labourersStats = await Labourer.aggregate([
+            { $match: { contractor: new mongoose.Types.ObjectId(contractorId) } },
+            {
+                $group: {
+                    _id: null,
+                    totalLabourers: { $sum: 1 },
+                    activeLabourers: {
+                        $sum: { $cond: [{ $eq: ["$isActive", true] }, 1, 0] }
+                    }
+                }
+            }
+        ]);
+
+        // Get contracts stats
+        const contractsStats = await Contract.aggregate([
+            { $match: { contractor: new mongoose.Types.ObjectId(contractorId) } },
+            {
+                $facet: {
+                    activeContracts: [
+                        { $match: { status: "ACTIVE" } },
+                        { $count: "count" }
+                    ],
+                    pendingContracts: [
+                        { $match: { status: "PENDING" } },
+                        { $count: "count" }
+                    ],
+                    lastMonthActiveContracts: [
+                        {
+                            $match: {
+                                status: "ACTIVE",
+                                createdAt: { $gte: lastMonthDate }
+                            }
+                        },
+                        { $count: "count" }
+                    ],
+                    newPendingContracts: [
+                        {
+                            $match: {
+                                status: "PENDING",
+                                createdAt: { $gte: lastMonthDate }
+                            }
+                        },
+                        { $count: "count" }
+                    ],
+                    totalEarnings: [
+                        { $match: { status: "ACTIVE" } },
+                        { $group: { _id: null, total: { $sum: "$advanceAmount" } } }
+                    ],
+                    lastYearEarnings: [
+                        {
+                            $match: {
+                                status: "ACTIVE",
+                                createdAt: { $gte: lastYearDate }
+                            }
+                        },
+                        { $group: { _id: null, total: { $sum: "$advanceAmount" } } }
+                    ]
+                }
+            }
+        ]);
+
+        const stats = contractsStats[0];
+        const labourers = labourersStats[0] || { totalLabourers: 0, activeLabourers: 0 };
+
+        return {
+            labourers: {
+                total: labourers.totalLabourers,
+                active: labourers.activeLabourers
+            },
+            contracts: {
+                active: stats.activeContracts[0]?.count || 0,
+                newActive: stats.lastMonthActiveContracts[0]?.count || 0,
+                pending: stats.pendingContracts[0]?.count || 0,
+                newPending: stats.newPendingContracts[0]?.count || 0
+            },
+            earnings: {
+                total: stats.totalEarnings[0]?.total || 0,
+                yearGrowth: calculateGrowthPercentage(
+                    stats.lastYearEarnings[0]?.total || 0,
+                    stats.totalEarnings[0]?.total || 0
+                )
+            }
+        };
+    } catch (error) {
+        logger.error('Error getting contractor dashboard stats:', error);
+        throw new Error('Failed to get contractor dashboard stats');
+    }
+};
+
+const calculateGrowthPercentage = (previous: number, current: number): number => {
+    if (previous === 0) return 0;
+    return ((current - previous) / previous) * 100;
 };

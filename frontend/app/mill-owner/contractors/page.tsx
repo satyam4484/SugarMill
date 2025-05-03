@@ -75,6 +75,8 @@ function ContractorTeamPage() {
     return true; // Include all items if no search term
   });
 
+  
+
   return (
     <DashboardLayout role="contractor">
       <div className="flex flex-col gap-5">

@@ -76,4 +76,20 @@ export class ContractorController {
             return res.status(500).json({ message: 'Error deleting contractor' });
         }
     }
+
+    static async getDashboardStats(req: any, res: Response): Promise<Response> {
+        try {
+            const stats = await ContractorRepository.getContractorDashboardStats(req.contractor._id);
+            return res.status(200).json({
+                success: true,
+                data: stats
+            });
+        } catch (error) {
+            logger.error('Error in getDashboardStats:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to get dashboard statistics'
+            });
+        }
+    }
 }

@@ -24,8 +24,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import withAuth from "@/hocs/withAuth"
 import { ContractDetails } from "@/network/agent"
 import { HTTP_STATUS_CODE } from "@/lib/contants"
+import { useToast } from "@/hooks/use-toast"
 
 function AdminContractsPage() {
+  const { toast } = useToast()
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [selectedContract, setSelectedContract] = useState<any[]>([]);
@@ -52,6 +54,29 @@ function AdminContractsPage() {
       console.log("error", error)
     }
   }
+
+  const statusChangeHandler = async (id: string, status: string) => {
+    try {
+      const response = await ContractDetails.UpdateContractDetils(id, { status: status });
+      if (response.status === HTTP_STATUS_CODE.OK) {
+        toast({
+          title: `Contract ${status}`,
+          variant: "default"
+        });
+        // Update the contract in the list with new status
+        setSelectedContract(prevContracts => 
+          prevContracts.map(contract => 
+            contract._id === id ? { ...contract, status } : contract
+          )
+        );
+      }
+    } catch (error) {
+      toast({
+        title: `Failed to ${status} Contract`,
+        variant: "destructive"
+      });
+    }
+  };
   
 
   useEffect(() => {
@@ -173,10 +198,28 @@ function AdminContractsPage() {
                                 <Eye className="h-4 w-4" />
                                 <span className="sr-only">View</span>
                               </Button>
-                              {/* <Button variant="ghost" size="icon" onClick={() => handleEditContract(contract)}>
-                                <Pencil className="h-4 w-4" />
-                                <span className="sr-only">Edit</span>
-                              </Button> */}
+                              {contract.status === "PENDING" && (
+                                <>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="text-green-600 hover:text-green-700"
+                                    onClick={() => statusChangeHandler(contract._id, "ACTIVE")}
+                                  >
+                                    <CheckCircle className="h-4 w-4" />
+                                    <span className="sr-only">Accept</span>
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon"
+                                    className="text-red-600 hover:text-red-700"
+                                    onClick={() => statusChangeHandler(contract._id, "REJECTED")}
+                                  >
+                                    <X className="h-4 w-4" />
+                                    <span className="sr-only">Reject</span>
+                                  </Button>
+                                </>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>

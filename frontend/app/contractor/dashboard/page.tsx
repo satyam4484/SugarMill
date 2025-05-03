@@ -24,6 +24,7 @@ function ContractorDashboardPage() {
   const router = useRouter();
   const [labourDetails,setLabourDetails] = useState<any>([]);
   const [contractDetails,setContractDetails] = useState<any>([]);
+  const [dashboardStatus, setDashboardStatus] = useState<any>(null);
   const { toast } = useToast()
 
   const laboursDetailsHandler = async() => {
@@ -39,6 +40,8 @@ function ContractorDashboardPage() {
       })
     }
   }
+
+  
 
   const contractsDetailsHandler = async() => {
     try{

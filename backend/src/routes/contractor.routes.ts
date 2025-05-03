@@ -9,5 +9,6 @@ router.get('/:id', ContractorController.getById);
 router.route('/').get(authenticateToken, ContractorController.getAll);
 router.put('/:id', ContractorController.update);
 router.delete('/:id', ContractorController.delete);
+router.get('/dashboard-stats', authenticateToken, ContractorController.getDashboardStats);
 
 export default router;
