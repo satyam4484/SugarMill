@@ -1,30 +1,16 @@
 "use client"
 
-import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { mockLabourers } from "@/lib/mock-data"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { motion } from "framer-motion"
-import { useState,useEffect } from "react"
+import { useRouter } from "next/navigation"
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AlertTriangle, CheckCircle, Edit, FileUp, Fingerprint, Plus, Search, Trash, Upload } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default function LabourGrid( {filteredLabourers}:{filteredLabourers:any}) {
+  const router = useRouter();
     return (
         <TabsContent value="grid" className="space-y-4">
               <Card>
@@ -102,10 +88,10 @@ export default function LabourGrid( {filteredLabourers}:{filteredLabourers:any})
                           </div>
                         </CardContent>
                         <div className="border-t p-4 flex justify-between">
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" onClick={() => router.push(`/contractor/team/${labourer._id}/edit`)}>
                             Edit
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" onClick={() => router.push(`/contractor/team/${labourer._id}`) }>
                             View Details
                           </Button>
                         </div>

@@ -156,32 +156,32 @@ export function Sidebar({ className, role = "admin", ...props }: SidebarProps) {
             title: "Contracts",
             href: "/contractor/contracts",
             icon: <Clipboard className="h-5 w-5" />,
-            submenu: [
-              { title: "Active Contracts", href: "/contractor/contracts/active" },
-              { title: "Contract Offers", href: "/contractor/contracts/offers" },
-              { title: "History", href: "/contractor/contracts/history" },
-            ],
+            // submenu: [
+            //   { title: "Active Contracts", href: "/contractor/contracts/active" },
+            //   { title: "Contract Offers", href: "/contractor/contracts/offers" },
+            //   { title: "History", href: "/contractor/contracts/history" },
+            // ],
           },
-          {
-            title: "Conflict Warnings",
-            href: "/contractor/conflicts",
-            icon: <AlertTriangle className="h-5 w-5" />,
-          },
+          // {
+          //   title: "Conflict Warnings",
+          //   href: "/contractor/conflicts",
+          //   icon: <AlertTriangle className="h-5 w-5" />,
+          // },
           // {
           //   title: "Vehicles",
           //   href: "/contractor/vehicles",
           //   icon: <Truck className="h-5 w-5" />,
           // },
-          {
-            title: "Contracts History",
-            href: "/contractor/history",
-            icon: <FileText className="h-5 w-5" />,
-          },
-          {
-            title: "Settings",
-            href: "/contractor/settings",
-            icon: <Settings className="h-5 w-5" />,
-          },
+          // {
+          //   title: "Contracts History",
+          //   href: "/contractor/history",
+          //   icon: <FileText className="h-5 w-5" />,
+          // },
+          // {
+          //   title: "Settings",
+          //   href: "/contractor/settings",
+          //   icon: <Settings className="h-5 w-5" />,
+          // },
         ]
       case CustomerRoles.CONTRACTOR:
         return [

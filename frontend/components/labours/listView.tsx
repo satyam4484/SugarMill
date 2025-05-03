@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useRouter } from "next/navigation"
 
-import { AlertTriangle, CheckCircle, Edit, FileUp, Fingerprint, Plus, Search, Trash, Upload } from "lucide-react"
+import { AlertTriangle, CheckCircle, Edit,Eye,FileUp, Fingerprint, Plus, Search, Trash, Upload } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-export default function ListView({filteredLabourers}: {filteredLabourers:any[]}) {
-    
+export default function ListView({ filteredLabourers }: { filteredLabourers: any[] }) {
+    const router = useRouter();
     return (
         <TabsContent value="list" className="space-y-4">
             <Card>
@@ -51,7 +52,7 @@ export default function ListView({filteredLabourers}: {filteredLabourers:any[]})
                                     <TableCell>{labourer.Age}</TableCell>
                                     <TableCell>{labourer.Gender}</TableCell>
                                     <TableCell>
-                                        {labourer.verificationStatus !=="PENDING" ? (
+                                        {labourer.verificationStatus !== "PENDING" ? (
                                             <Badge
                                                 variant="outline"
                                                 className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
@@ -70,7 +71,7 @@ export default function ListView({filteredLabourers}: {filteredLabourers:any[]})
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant={labourer.isActive ? "default" : "destructive"}>
-                                            {labourer.isActive ? "active":"in-active"}
+                                            {labourer.isActive ? "active" : "in-active"}
                                         </Badge>
                                     </TableCell>
                                     {/* <TableCell>
@@ -93,7 +94,19 @@ export default function ListView({filteredLabourers}: {filteredLabourers:any[]})
                                     </TableCell> */}
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
-                                            <Button variant="ghost" size="icon">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => router.push(`/contractor/team/${labourer._id}`)}
+                                            >
+                                                <Eye className="h-4 w-4" />
+                                                <span className="sr-only">View Details</span>
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => router.push(`/contractor/team/${labourer._id}/edit`)}
+                                            >
                                                 <Edit className="h-4 w-4" />
                                                 <span className="sr-only">Edit</span>
                                             </Button>

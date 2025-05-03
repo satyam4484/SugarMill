@@ -3,9 +3,10 @@ import * as LabourRepository from '../repositories/labour.repository.js';
 import logger from '../utils/logger.js';
 
 export class LabourerController {
-    static async create(req: Request, res: Response): Promise<Response> {
+    static async create(req: any, res: Response): Promise<Response> {
         try {
             const LabourerData = req.body;
+            console.log("labourere data--",LabourerData)
             const files = req.files as Express.Multer.File[];
             if (!files || files.length === 0) {
                 return res.status(400).json({ message: 'No files uploaded' });
@@ -15,7 +16,7 @@ export class LabourerController {
             LabourerData.profilePicture = files[0].path;
             LabourerData.documents.aadhar.aadharPhoto = files[1].path;
             LabourerData.documents.pancard.panPhoto = files[2].path;
-
+            LabourerData.contractor = req?.contractor._id;
             const labourer = await LabourRepository.createLabour(LabourerData);
             return res.status(201).json(labourer);
         } catch (error) {

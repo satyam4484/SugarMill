@@ -95,7 +95,7 @@ function ContractorDashboardPage() {
   }
 
   // Filter contracts for this contractor (using ID 1 for demo)
-  const contractorContracts = mockContracts.filter((contract) => contract.contractorId === "1")
+  // const contractorContracts = contractDetails.filter((contract) => contract.contractorId === "1")
 
   // Filter labourers for this contractor
   const contractorLabourers = mockLabourers.filter((labourer) => labourer.contractorId === "1")
@@ -222,7 +222,7 @@ function ContractorDashboardPage() {
                             </div>
                           </div>
                         ))}
-                      {contractorContracts.filter((contract: any) => contract.status === "PENDING").length === 0 && (
+                      {contractDetails.filter((contract: any) => contract.status === "PENDING").length === 0 && (
                         <div className="text-center py-4">
                           <p className="text-sm text-muted-foreground">No pending contract offers</p>
                         </div>

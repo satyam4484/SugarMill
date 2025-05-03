@@ -52,7 +52,6 @@ export const createLabour = async (labourData: any): Promise<{userId: string, pa
         });
         await labourer.save();
         logger.success(`Labourer created successfully with ID: ${labourer._id}`);
-        // Update contractor's labour count
         await Contractor.findByIdAndUpdate(
             contractor,
             { $inc: { laboursCount: 1 } },
