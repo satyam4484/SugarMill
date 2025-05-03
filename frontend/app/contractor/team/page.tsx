@@ -19,29 +19,57 @@ import {
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { useState,useEffect } from "react"
 import { AlertTriangle, CheckCircle, Edit, FileUp, Fingerprint, Plus, Search, Trash, Upload } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
+import { labourers } from "@/network/agent"
+import withAuth from "@/hocs/withAuth"
+import { HTTP_STATUS_CODE } from "@/lib/contants"
+import ListView from "@/components/labours/listView"
+import LabourGrid from "@/components/labours/grid"
 
-export default function ContractorTeamPage() {
+function ContractorTeamPage() {
   const { toast } = useToast()
   const [searchTerm, setSearchTerm] = useState("")
+  const [labourDetails,setLabourDetails] = useState<any>([]);
   const [statusFilter, setStatusFilter] = useState("all")
   const [showBiometricCapture, setShowBiometricCapture] = useState(false)
   const [captureComplete, setCaptureComplete] = useState(false)
 
+  const laboursDetailsHandler = async() => {
+    try{
+      const response = await labourers.getAllLabours();
+      if(response.status === HTTP_STATUS_CODE.OK) {
+        setLabourDetails(response.data);
+      }
+    }catch(error) {
+      toast({
+        title: "Failed to fetch Labours",
+        variant:"destructive"
+      })
+    }
+  }
+
+  useEffect(() => {
+    laboursDetailsHandler();
+
+  },[]);
+
   // Filter labourers based on search term and status
-  const filteredLabourers = mockLabourers.filter((labourer) => {
+  const filteredLabourers = labourDetails.filter((labourer: any) => {
     const matchesSearch =
-      labourer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      labourer.aadharNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      labourer.phone.toLowerCase().includes(searchTerm.toLowerCase())
+      labourer.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      labourer.documents.aadhar.aadharNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      labourer.user.contactNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      labourer.documents.pancard.panNumber.toLowerCase().includes(searchTerm.toLowerCase())
 
-    const matchesStatus = statusFilter === "all" || labourer.status === statusFilter
+    const matchesStatus = statusFilter === "all" || 
+      (statusFilter === "active" && labourer.isActive) ||
+      (statusFilter === "inactive" && !labourer.isActive)
 
-    return matchesSearch && matchesStatus && labourer.contractorId === "1" // Only show labourers for this contractor (ID 1)
+    return matchesSearch && matchesStatus
   })
 
   const handleCaptureBiometric = () => {
@@ -213,197 +241,15 @@ export default function ContractorTeamPage() {
               </div>
             </div>
 
-            <TabsContent value="list" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Team Members</CardTitle>
-                  <CardDescription>List of all labourers in your team</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Aadhar Number</TableHead>
-                        <TableHead>Age</TableHead>
-                        <TableHead>Gender</TableHead>
-                        <TableHead>Biometric</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Conflicts</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredLabourers.map((labourer) => (
-                        <TableRow key={labourer.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-3">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={labourer.photoUrl || "/placeholder.svg"} alt={labourer.name} />
-                                <AvatarFallback>{labourer.name.charAt(0)}</AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="font-medium">{labourer.name}</p>
-                                <p className="text-xs text-muted-foreground">{labourer.phone}</p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>{labourer.aadharNumber}</TableCell>
-                          <TableCell>{labourer.age}</TableCell>
-                          <TableCell>{labourer.gender}</TableCell>
-                          <TableCell>
-                            {labourer.biometricVerified ? (
-                              <Badge
-                                variant="outline"
-                                className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                              >
-                                <CheckCircle className="mr-1 h-3 w-3" />
-                                Verified
-                              </Badge>
-                            ) : (
-                              <Badge
-                                variant="outline"
-                                className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                              >
-                                Pending
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={labourer.status === "active" ? "default" : "destructive"}>
-                              {labourer.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {labourer.conflicts ? (
-                              <Badge
-                                variant="outline"
-                                className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                              >
-                                <AlertTriangle className="mr-1 h-3 w-3" />
-                                Conflict
-                              </Badge>
-                            ) : (
-                              <Badge
-                                variant="outline"
-                                className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                              >
-                                None
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button variant="ghost" size="icon">
-                                <Edit className="h-4 w-4" />
-                                <span className="sr-only">Edit</span>
-                              </Button>
-                              <Button variant="ghost" size="icon">
-                                <Trash className="h-4 w-4" />
-                                <span className="sr-only">Delete</span>
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </TabsContent>
+            <ListView filteredLabourers={filteredLabourers}/>
 
-            <TabsContent value="grid" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Team Members</CardTitle>
-                  <CardDescription>Grid view of all labourers in your team</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredLabourers.map((labourer) => (
-                      <Card key={labourer.id} className="overflow-hidden">
-                        <CardHeader className="p-4">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-10 w-10">
-                              <AvatarImage src={labourer.photoUrl || "/placeholder.svg"} alt={labourer.name} />
-                              <AvatarFallback>{labourer.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <CardTitle className="text-base">{labourer.name}</CardTitle>
-                              <CardDescription>{labourer.phone}</CardDescription>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="p-4 pt-0">
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Aadhar:</span>
-                              <span>{labourer.aadharNumber}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Age:</span>
-                              <span>{labourer.age} years</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Gender:</span>
-                              <span>{labourer.gender}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Biometric:</span>
-                              {labourer.biometricVerified ? (
-                                <Badge
-                                  variant="outline"
-                                  className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                                >
-                                  <CheckCircle className="mr-1 h-3 w-3" />
-                                  Verified
-                                </Badge>
-                              ) : (
-                                <Badge
-                                  variant="outline"
-                                  className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-                                >
-                                  Pending
-                                </Badge>
-                              )}
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Status:</span>
-                              <Badge variant={labourer.status === "active" ? "default" : "destructive"}>
-                                {labourer.status}
-                              </Badge>
-                            </div>
-                            {labourer.conflicts && (
-                              <div className="flex justify-between">
-                                <span className="text-muted-foreground">Conflicts:</span>
-                                <Badge
-                                  variant="outline"
-                                  className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                                >
-                                  <AlertTriangle className="mr-1 h-3 w-3" />
-                                  Conflict
-                                </Badge>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                        <div className="border-t p-4 flex justify-between">
-                          <Button variant="outline" size="sm">
-                            Edit
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            View Details
-                          </Button>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+           <LabourGrid filteredLabourers={filteredLabourers} />
+            
           </Tabs>
         </motion.div>
       </div>
     </DashboardLayout>
   )
 }
+
+export default withAuth(ContractorTeamPage);

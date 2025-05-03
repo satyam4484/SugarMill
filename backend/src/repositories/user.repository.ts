@@ -160,3 +160,39 @@ export const generateSecurePassword = (name: string, role: UserRole): string => 
         throw new Error('Failed to generate password');
     }
 };
+
+export const generateNewPassword = async (userId: string): Promise<any> => {
+    const response: any = {
+        isError: false,
+        message: '',
+        data: null
+    };
+    
+    try {
+        // Find the user
+        const user = await User.findOne({ userId });
+        if (!user) {
+            response.isError = true;
+            response.message = 'User not found';
+            return response;
+        }
+
+        // Generate new password using existing function
+        const newPassword = generateSecurePassword(user.name, user.role);
+        
+        // Update user's password
+        user.passwordHash = newPassword;
+        await user.save();
+
+        response.message = 'Password updated successfully';
+        response.data = { userId, newPassword };
+        logger.info(`Generated new password for user: ${userId}`);
+        
+        return response;
+    } catch (error) {
+        logger.error('Error generating new password:', error);
+        response.isError = true;
+        response.message = 'Error generating new password';
+        return response;
+    }
+};

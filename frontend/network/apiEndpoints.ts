@@ -1,3 +1,4 @@
+import { labourers } from "./agent";
 
 
 export const apiEndpoints = {
@@ -6,5 +7,6 @@ export const apiEndpoints = {
     contractor: 'contractors',
     document: 'documents',
     user:'users',
-    contract:'contracts'
+    contract:'contracts',
+    labourers:'labours'
 }

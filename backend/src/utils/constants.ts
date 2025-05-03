@@ -8,7 +8,7 @@ export enum UserRole {
 export enum VerificationStatus {
     PENDING = 'PENDING',
     ACTIVE = 'ACTIVE',
-    APPROVED = 'APPROVED',
+    COMPLETED = 'COMPLETED',
     REJECTED = 'REJECTED'
 }
 

@@ -14,7 +14,7 @@ const router = Router();
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
 router.use('/contractors', contractorRoutes); 
-router.use('/labour',labourRoutes)
+router.use('/labours',labourRoutes)
 router.use('/mill',millRoutes)
 router.use('/customers',customerRoutes)
 router.use('/documents',documentRoutes)

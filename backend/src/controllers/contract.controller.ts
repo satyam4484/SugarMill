@@ -40,10 +40,20 @@ export class ContractController {
         }
     }
 
-    static async getAll(req: Request, res: Response): Promise<Response> {
+    static async getAll(req: any, res: Response): Promise<Response> {
         try {
             const query = req.query;
-            const response = await ContractRepository.getAllContracts(query);
+            let filter: any = {}
+            if(req?.mill) {
+                filter.millOwner = req.mill._id;
+            }else if (req?.contractor) {
+                filter.contractor = req.contractor._id
+            }
+            if(query?.status) {
+                filter.status=query.status
+            }
+            console.log("filter",filter)
+            const response = await ContractRepository.getAllContracts(filter,query);
             if (response.isError) {
                 return res.status(400).json(response);
             }

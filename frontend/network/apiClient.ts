@@ -1,7 +1,8 @@
 import axios from "axios";
-
-export const BASE_URL = "http://127.0.0.1:8000/api/";
 import { AuthConstant } from "@/lib/contants";
+
+export const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+console.log("BASE_URL",BASE_URL)
 
 const axiosClient = (options = {}) => {
     if (localStorage.getItem(AuthConstant.TOKEN_KEY)) {

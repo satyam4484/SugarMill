@@ -27,6 +27,40 @@ export class UserController {
             });
         }
     }
+    
+    static async generateNewPassword(req: Request, res: Response): Promise<Response> {
+        try {
+            const { userId } = req.body;
+            
+            if (!userId) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'UserId is required'
+                });
+            }
+
+            const result = await UserRepository.generateNewPassword(userId);
+            
+            if (result.isError) {
+                return res.status(400).json({
+                    success: false,
+                    message: result.message
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: result.message,
+                data: result.data
+            });
+        } catch (error) {
+            logger.error('Error generating new password:', error);
+            return res.status(500).json({
+                success: false,
+                message: 'Internal server error while generating new password'
+            });
+        }
+    }
 }
 
 export const userController = new UserController();

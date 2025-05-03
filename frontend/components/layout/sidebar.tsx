@@ -140,7 +140,7 @@ export function Sidebar({ className, role = "admin", ...props }: SidebarProps) {
           //   icon: <Settings className="h-5 w-5" />,
           // },
         ]
-      case CustomerRoles.LABOURER:
+      case CustomerRoles.CONTRACTOR:
         return [
           {
             title: "Dashboard",
@@ -195,26 +195,26 @@ export function Sidebar({ className, role = "admin", ...props }: SidebarProps) {
             href: "/supervisor/team",
             icon: <Users className="h-5 w-5" />,
           },
-          {
-            title: "Attendance",
-            href: "/supervisor/attendance",
-            icon: <CalendarCheck className="h-5 w-5" />,
-          },
-          {
-            title: "Chat",
-            href: "/supervisor/chat",
-            icon: <MessageSquare className="h-5 w-5" />,
-          },
-          {
-            title: "Reports",
-            href: "/supervisor/reports",
-            icon: <FileText className="h-5 w-5" />,
-          },
-          {
-            title: "Settings",
-            href: "/supervisor/settings",
-            icon: <Settings className="h-5 w-5" />,
-          },
+          // {
+          //   title: "Attendance",
+          //   href: "/supervisor/attendance",
+          //   icon: <CalendarCheck className="h-5 w-5" />,
+          // },
+          // {
+          //   title: "Chat",
+          //   href: "/supervisor/chat",
+          //   icon: <MessageSquare className="h-5 w-5" />,
+          // },
+          // {
+          //   title: "Reports",
+          //   href: "/supervisor/reports",
+          //   icon: <FileText className="h-5 w-5" />,
+          // },
+          // {
+          //   title: "Settings",
+          //   href: "/supervisor/settings",
+          //   icon: <Settings className="h-5 w-5" />,
+          // },
         ]
       default:
         return []

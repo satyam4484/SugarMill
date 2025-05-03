@@ -38,13 +38,20 @@ export class LabourerController {
         }
     }
 
-    static async getAll(req: Request, res: Response): Promise<Response> {
+    static async getAll(req: any, res: Response): Promise<Response> {
         try {
-            const contractors = await LabourRepository.getAllLabourers();
+            logger.info('Fetching all Labourerss...');
+            const query = req.query;
+            let filter = {}
+            if(req?.contractor) {
+                filter = {contractor: req.contractor}
+            }
+            
+            const contractors = await LabourRepository.getAllLabourers(filter,query);
             return res.status(200).json(contractors);
         } catch (error) {
-            logger.error('Error fetching all contractors:', error);
-            return res.status(500).json({ message: 'Error fetching contractors' });
+            logger.error('Error fetching all Labourerss:', error);
+            return res.status(500).json({ message: 'Error fetching Labourerss' });
         }
     }
 

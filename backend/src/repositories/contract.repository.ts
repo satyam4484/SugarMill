@@ -60,14 +60,14 @@ export const getContractById = async (id: string): Promise<any> => {
 };
 
 // Get all contracts
-export const getAllContracts = async (query?: any): Promise<any> => {
+export const getAllContracts = async (filter?: any,query?: any): Promise<any> => {
     const response: any = {
         isError: false,
         message: '',
     };
     try {
         logger.info('Fetching all contracts');
-        const contracts = await Contract.find().populate([
+        const contracts = await Contract.find(filter).populate([
             {
                 path: 'millOwner',
                 populate: {
@@ -82,7 +82,7 @@ export const getAllContracts = async (query?: any): Promise<any> => {
                     select: 'name contactNo'
                 }
             }
-        ]).lean().exec();
+        ]).limit(query?.limit).lean().exec();
         
         const contractsWithCount = contracts.map(contract => ({
             ...contract,
@@ -91,10 +91,8 @@ export const getAllContracts = async (query?: any): Promise<any> => {
 
         logger.info(`Successfully fetched ${contracts.length} contracts`);
         let length = contractsWithCount.length;
-        if(query?.limit){
-            length = parseInt(query.limit);
-        }
-        response.data = contractsWithCount.slice(0,length);
+        
+        response.data = contractsWithCount
         response.message = 'Contracts fetched successfully';
     } catch (error) {
         logger.error('Error fetching all contracts:', error);

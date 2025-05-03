@@ -7,7 +7,6 @@ const router = express.Router();
 
 // Apply authentication middleware to all routes
 router.use('/', authenticateToken, uploadFiles(1));
-
 // Create a new contract
 router.post('/', ContractController.create);
 

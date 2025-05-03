@@ -126,15 +126,15 @@ export const getLabourerByUserId = async (userId: string): Promise<ILabourer | n
 };
 
 // Get all contractors
-export const getAllLabourers = async (filter: any = {}): Promise<ILabourer[]> => {
+export const getAllLabourers = async (filter: any = {},query: any = {}): Promise<ILabourer[]> => {
     try {
-        logger.info('Fetching all contractors');
-        const contractors = await Labourer.find(filter).populate('user').populate('documents');
-        logger.info(`Successfully fetched ${contractors.length} contractors`);
+        logger.info('Fetching all Labourerss');
+        const contractors = await Labourer.find(filter).populate('user').populate('documents').limit(query?.limit);
+        logger.info(`Successfully fetched ${contractors.length} Labourerss`);
         return contractors;
     } catch (error) {
-        logger.error('Error fetching all contractors:', error);
-        throw new Error('Error fetching all contractors');
+        logger.error('Error fetching all Labourerss:', error);
+        throw new Error('Error fetching all Labourerss');
     }
 };
 

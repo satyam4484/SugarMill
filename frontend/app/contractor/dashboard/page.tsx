@@ -4,6 +4,7 @@ import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { mockContractorStats, mockContracts, mockLabourers } from "@/lib/mock-data"
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils"
+import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -12,8 +13,74 @@ import { AlertTriangle, ArrowUpRight, Calendar, CheckCircle, FileCheck, FileText
 import { BarChart } from "@/components/ui/chart"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import "chart.js/auto"
+import { labourers,ContractDetails } from "@/network/agent"
+import withAuth from "@/hocs/withAuth"
+import { useEffect, useState } from "react"
+import { useToast } from "@/hooks/use-toast"
+import { HTTP_STATUS_CODE } from "@/lib/contants"
 
-export default function ContractorDashboardPage() {
+function ContractorDashboardPage() {
+
+  const router = useRouter();
+  const [labourDetails,setLabourDetails] = useState<any>([]);
+  const [contractDetails,setContractDetails] = useState<any>([]);
+  const { toast } = useToast()
+
+  const laboursDetailsHandler = async() => {
+    try{
+      const response = await labourers.getAllLabours('limit=6');
+      if(response.status === HTTP_STATUS_CODE.OK) {
+        setLabourDetails(response.data);
+      }
+    }catch(error) {
+      toast({
+        title: "Failed to fetch Labours",
+        variant:"destructive"
+      })
+    }
+  }
+
+  const contractsDetailsHandler = async() => {
+    try{
+      const response = await ContractDetails.getAllContract();
+      if(response.status === HTTP_STATUS_CODE.OK) {
+        setContractDetails(response.data.data);
+      }
+    }catch(error) {
+      toast({
+        title: "Failed to fetch Contracts",
+        variant:"destructive"
+      })
+    }
+  }
+
+  console.log("contract-details--",contractDetails);
+
+  useEffect(() => {
+    const resolvePromises = [
+      laboursDetailsHandler(),
+      contractsDetailsHandler()
+    ];
+    Promise.all(resolvePromises)
+  },[]);
+  
+  const statusChangeHandler = async (id:string,status:string) => {
+    try{
+      const response = await ContractDetails.UpdateContractDetils(id,{status:status});
+      if(response.status === HTTP_STATUS_CODE.OK) {
+        toast({
+          title:`Contract ${status}`,
+          variant:"default"
+        })
+        setContractDetails(contractDetails.filter((contract: any)  => contract._id != id));
+      }
+    }catch(error){
+      toast({
+        title:`Failed to ${status} Contract `,
+        variant:"destructive"
+      })
+    }
+  }
   // Sample data for charts
   const earningsData = {
     labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
@@ -32,7 +99,6 @@ export default function ContractorDashboardPage() {
 
   // Filter labourers for this contractor
   const contractorLabourers = mockLabourers.filter((labourer) => labourer.contractorId === "1")
-
   return (
     <DashboardLayout role="contractor">
       <div className="flex flex-col gap-5">
@@ -135,28 +201,28 @@ export default function ContractorDashboardPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {contractorContracts
-                        .filter((contract) => contract.status === "pending")
-                        .map((contract) => (
-                          <div key={contract.id} className="flex items-center">
+                      {contractDetails
+                        .filter((contract: any) => contract.status === "PENDING")
+                        .map((contract: any) => (
+                          <div key={contract._id} className="flex items-center">
                             <div className="flex items-center justify-center h-9 w-9 rounded-full bg-blue-100 dark:bg-blue-900">
                               <FileText className="h-5 w-5 text-blue-600 dark:text-blue-300" />
                             </div>
                             <div className="ml-4 space-y-1">
-                              <p className="text-sm font-medium leading-none">Offer from {contract.millOwnerName}</p>
+                              <p className="text-sm font-medium leading-none">Offer from {contract.millOwner.name}</p>
                               <p className="text-sm text-muted-foreground">
                                 {contract.totalLabourers} labourers, {formatCurrency(contract.advanceAmount)} advance
                               </p>
                             </div>
                             <div className="ml-auto flex gap-2">
-                              <Button variant="outline" size="sm">
+                              <Button variant="outline" size="sm" onClick={() => statusChangeHandler( contract._id,'REJECT')}>
                                 Reject
                               </Button>
-                              <Button size="sm">Accept</Button>
+                              <Button size="sm" onClick={() =>statusChangeHandler(contract._id,'ACTIVE')}>Accept</Button>
                             </div>
                           </div>
                         ))}
-                      {contractorContracts.filter((contract) => contract.status === "pending").length === 0 && (
+                      {contractorContracts.filter((contract: any) => contract.status === "PENDING").length === 0 && (
                         <div className="text-center py-4">
                           <p className="text-sm text-muted-foreground">No pending contract offers</p>
                         </div>
@@ -254,24 +320,23 @@ export default function ContractorDashboardPage() {
                     <CardTitle>Team Members</CardTitle>
                     <CardDescription>Manage your team of labourers</CardDescription>
                   </div>
-                  <Button>
+                  {/* <Button>
                     <Plus className="mr-2 h-4 w-4" />
                     Add Labourer
-                  </Button>
+                  </Button> */}
                 </CardHeader>
-                <CardContent>
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {contractorLabourers.map((labourer) => (
-                      <Card key={labourer.id} className="overflow-hidden">
+                    {labourDetails && labourDetails.slice(0, 5).map((labourer: any) => (
+                      <Card key={labourer._id} className="overflow-hidden">
                         <CardHeader className="p-4">
                           <div className="flex items-center gap-3">
                             <Avatar className="h-10 w-10">
-                              <AvatarImage src={labourer.photoUrl || "/placeholder.svg"} alt={labourer.name} />
-                              <AvatarFallback>{labourer.name.charAt(0)}</AvatarFallback>
+                              <AvatarImage src={labourer.profilePicture || "/placeholder.jpg"} alt={labourer.user.name} />
+                              <AvatarFallback>{labourer.user.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div>
-                              <CardTitle className="text-base">{labourer.name}</CardTitle>
-                              <CardDescription>{labourer.phone}</CardDescription>
+                              <CardTitle className="text-base">{labourer.user.name}</CardTitle>
+                              <CardDescription>{labourer.user.contactNo}</CardDescription>
                             </div>
                           </div>
                         </CardHeader>
@@ -279,15 +344,15 @@ export default function ContractorDashboardPage() {
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Aadhar:</span>
-                              <span>{labourer.aadharNumber}</span>
+                              <span>{labourer.documents.aadhar.aadharNumber}</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Age:</span>
-                              <span>{labourer.age} years</span>
+                              <span>{labourer.Age} years</span>
                             </div>
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Biometric:</span>
-                              {labourer.biometricVerified ? (
+                              {labourer.verificationStatus === "APPROVED" ? (
                                 <Badge
                                   variant="outline"
                                   className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
@@ -306,11 +371,11 @@ export default function ContractorDashboardPage() {
                             </div>
                             <div className="flex justify-between">
                               <span className="text-muted-foreground">Status:</span>
-                              <Badge variant={labourer.status === "active" ? "default" : "destructive"}>
-                                {labourer.status}
+                              <Badge variant={labourer.isActive ? "default" : "destructive"}>
+                                {labourer.isActive ? "Active":"In-Active"}
                               </Badge>
                             </div>
-                            {labourer.conflicts && (
+                            {/* {labourer?.conflicts && (
                               <div className="flex justify-between">
                                 <span className="text-muted-foreground">Conflicts:</span>
                                 <Badge
@@ -321,7 +386,7 @@ export default function ContractorDashboardPage() {
                                   Conflict
                                 </Badge>
                               </div>
-                            )}
+                            )} */}
                           </div>
                         </CardContent>
                         <div className="border-t p-4 flex justify-between">
@@ -334,8 +399,24 @@ export default function ContractorDashboardPage() {
                         </div>
                       </Card>
                     ))}
-                  </div>
-                </CardContent>
+                  
+                  {labourDetails && labourDetails.length > 5 && (
+                    <Card className="overflow-hidden flex flex-col justify-center items-center p-6 cursor-pointer" onClick={() => router.push('/contractor/team')}>
+                      <div className="text-center space-y-4">
+                        <div className="bg-primary/10 rounded-full p-3 inline-block">
+                          <Users className="h-6 w-6 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">View All Labourers</h3>
+                          <p className="text-sm text-muted-foreground">{labourDetails.length - 5} more labourers</p>
+                        </div>
+                        <Button asChild >
+                          See All Labourers
+                        </Button>
+                      </div>
+                    </Card>
+                  )}
+                </div>
               </Card>
             </TabsContent>
             <TabsContent value="contracts" className="space-y-4">
@@ -346,11 +427,11 @@ export default function ContractorDashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {contractorContracts
-                      .filter((contract) => contract.status === "active")
-                      .map((contract) => (
+                    {contractDetails
+                      .filter((contract:any) => contract.status === "ACTIVE")
+                      .map((contract:any) => (
                         <div
-                          key={contract.id}
+                          key={contract._id}
                           className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0"
                         >
                           <div className="flex items-center gap-4">
@@ -358,9 +439,9 @@ export default function ContractorDashboardPage() {
                               <FileCheck className="h-5 w-5 text-primary" />
                             </div>
                             <div>
-                              <p className="font-medium">Contract with {contract.millOwnerName}</p>
+                              <p className="font-medium">Contract with {contract.millOwner.Name}</p>
                               <p className="text-sm text-muted-foreground">
-                                {formatDate(contract.startDate)} - {formatDate(contract.endDate)}
+                              {formatDate(new Date(contract.startDate).toISOString())} - {formatDate(new Date(contract.endDate).toISOString())}
                               </p>
                             </div>
                           </div>
@@ -453,3 +534,6 @@ export default function ContractorDashboardPage() {
     </DashboardLayout>
   )
 }
+
+
+export default withAuth(ContractorDashboardPage);
