@@ -11,7 +11,6 @@ export const ContractDetails = {
     createContract: (data: any) => axiosClient({"Content-Type": "multipart/form-data"}).post(`${apiEndpoints.contract}`,data),
     getAllContract: (query?:any) => axiosClient().get(`${apiEndpoints.contract}?${query?query:''}`),
     UpdateContractDetils:(id: string,data: any) => axiosClient().put(`${apiEndpoints.contract}/${id}`,JSON.stringify(data)),
-    getDashboardStatus:() => axiosClient().get(`${apiEndpoints.contract}/dashboard-stats`)
 }
 
 export const millOwnersApi = {
@@ -25,7 +24,9 @@ export const userAuth = {
 
 export const contractors = {
     createContractor: (data: any) => axiosClient({"Content-Type": "multipart/form-data"}).post(`${apiEndpoints.contractor}`,data ),
-    getAllContractors: (query?:any) => axiosClient().get(`${apiEndpoints.contractor}?${query?query:''}`)
+    getAllContractors: (query?:any) => axiosClient().get(`${apiEndpoints.contractor}?${query?query:''}`),
+    getDashboardStatus:() => axiosClient().get(`${apiEndpoints.contractor}/dashboard-stats`)
+
 }
 
 export const labourers = {

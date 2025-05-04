@@ -81,6 +81,13 @@ export const getAllContracts = async (filter?: any,query?: any): Promise<any> =>
                     path: 'user',
                     select: 'name contactNo'
                 }
+            },
+            {
+                path: 'labourers',
+                populate: {
+                    path: 'user',
+                    select: 'name contactNo'
+                }
             }
         ]).limit(query?.limit).lean().exec();
         

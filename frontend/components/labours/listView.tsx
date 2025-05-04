@@ -110,10 +110,10 @@ export default function ListView({ filteredLabourers }: { filteredLabourers: any
                                                 <Edit className="h-4 w-4" />
                                                 <span className="sr-only">Edit</span>
                                             </Button>
-                                            <Button variant="ghost" size="icon">
+                                            {/* <Button variant="ghost" size="icon">
                                                 <Trash className="h-4 w-4" />
                                                 <span className="sr-only">Delete</span>
-                                            </Button>
+                                            </Button> */}
                                         </div>
                                     </TableCell>
                                 </TableRow>

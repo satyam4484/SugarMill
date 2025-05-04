@@ -13,7 +13,7 @@ import { AlertTriangle, ArrowUpRight, Calendar, CheckCircle, FileCheck, FileText
 import { BarChart } from "@/components/ui/chart"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import "chart.js/auto"
-import { labourers,ContractDetails } from "@/network/agent"
+import { labourers,ContractDetails ,contractors} from "@/network/agent"
 import withAuth from "@/hocs/withAuth"
 import { useEffect, useState } from "react"
 import { useToast } from "@/hooks/use-toast"
@@ -57,15 +57,28 @@ function ContractorDashboardPage() {
     }
   }
 
-  console.log("contract-details--",contractDetails);
+  const getDashboardStatsHandler = async () => {
+    try {
+      const response = await contractors.getDashboardStatus();
+      if (response.status === HTTP_STATUS_CODE.OK) {
+        setDashboardStatus(response.data.data);
+      }
+    } catch (error) {
+      toast({
+        title: "Failed to fetch dashboard statistics",
+        variant: "destructive"
+      });
+    }
+  };
 
   useEffect(() => {
     const resolvePromises = [
       laboursDetailsHandler(),
-      contractsDetailsHandler()
+      contractsDetailsHandler(),
+      getDashboardStatsHandler()
     ];
-    Promise.all(resolvePromises)
-  },[]);
+    Promise.all(resolvePromises);
+  }, []);
   
   const statusChangeHandler = async (id:string,status:string) => {
     try{
@@ -122,8 +135,8 @@ function ContractorDashboardPage() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{mockContractorStats.totalLabourers}</div>
-              <p className="text-xs text-muted-foreground">{mockContractorStats.activeLabourers} active labourers</p>
+              <div className="text-2xl font-bold">{dashboardStatus?.labourers?.total || 0}</div>
+              <p className="text-xs text-muted-foreground">{dashboardStatus?.labourers?.active || 0} active labourers</p>
             </CardContent>
           </Card>
           <Card>
@@ -132,9 +145,9 @@ function ContractorDashboardPage() {
               <FileCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{mockContractorStats.activeContracts}</div>
+              <div className="text-2xl font-bold">{dashboardStatus?.contracts?.active || 0}</div>
               <p className="text-xs text-muted-foreground">
-                <span className="text-green-500">+1</span> since last month
+                <span className="text-green-500">+{dashboardStatus?.contracts?.newActive || 0}</span> since last month
               </p>
             </CardContent>
           </Card>
@@ -144,9 +157,9 @@ function ContractorDashboardPage() {
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{mockContractorStats.pendingContracts}</div>
+              <div className="text-2xl font-bold">{dashboardStatus?.contracts?.pending || 0}</div>
               <p className="text-xs text-muted-foreground">
-                <span className="text-yellow-500">+2</span> new offers
+                <span className="text-yellow-500">+{dashboardStatus?.contracts?.newPending || 0}</span> new offers
               </p>
             </CardContent>
           </Card>
@@ -156,9 +169,9 @@ function ContractorDashboardPage() {
               <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(mockContractorStats.totalEarnings)}</div>
+              <div className="text-2xl font-bold">{formatCurrency(dashboardStatus?.earnings?.total || 0)}</div>
               <p className="text-xs text-muted-foreground">
-                <span className="text-green-500">+8%</span> from last year
+                <span className="text-green-500">+{dashboardStatus?.earnings?.yearGrowth.toFixed(1) || 0}%</span> from last year
               </p>
             </CardContent>
           </Card>

@@ -168,6 +168,7 @@ export const deleteContractor = async (id: string): Promise<boolean> => {
 
 export const getContractorDashboardStats = async (contractorId: string) => {
     try {
+        console.log("contractor id--",contractorId);
         const currentDate = new Date();
         const lastMonthDate = new Date(currentDate.setMonth(currentDate.getMonth() - 1));
         const lastYearDate = new Date(currentDate.setFullYear(currentDate.getFullYear() - 1));
