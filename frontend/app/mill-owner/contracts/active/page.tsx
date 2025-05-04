@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import withAuth from "@/hocs/withAuth"
 import { ContractDetails } from "@/network/agent"
 import { HTTP_STATUS_CODE } from "@/lib/contants"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
 function AdminContractsPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -258,15 +259,16 @@ function AdminContractsPage() {
         {/* Contract Details Dialog */}
         {viewContractDetails && (
           <Dialog open={!!viewContractDetails} onOpenChange={(open) => !open && setViewContractDetails(null)}>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>Contract Details</DialogTitle>
-                <DialogDescription>
-                  Contract #{viewContractDetails._id} between {viewContractDetails.millOwner?.name} and{" "}
-                  {viewContractDetails.contractor?.user?.name}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <DialogContent className="max-w-7xl">
+            <DialogHeader>
+              <DialogTitle>Contract Details</DialogTitle>
+              <DialogDescription>
+                Contract #{viewContractDetails._id} between {viewContractDetails.millOwner?.name} and{" "}
+                {viewContractDetails.contractor?.user?.name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-medium mb-2">Contract Information</h3>
                   <div className="space-y-2">
@@ -304,6 +306,7 @@ function AdminContractsPage() {
                     </div>
                   </div>
                 </div>
+
                 <div>
                   <h3 className="text-lg font-medium mb-2">Verification Status</h3>
                   {viewContractDetails.conflicts ? (
@@ -351,46 +354,93 @@ function AdminContractsPage() {
                       </div>
                     </div>
                   )}
+                  
+                </div>
 
-                  <div className="mt-4">
-                    <h3 className="text-lg font-medium mb-2">Contract Document</h3>
-                    <div className="border rounded-lg p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-blue-600" />
-                        <span>Contract_Agreement.pdf</span>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        View
-                      </Button>
+                <div>
+                  <h3 className="text-lg font-medium mb-2">Contract Document</h3>
+                  <div className="border rounded-lg p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-blue-600" />
+                      <span>Contract_Agreement.pdf</span>
                     </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      asChild
+                    >
+                      
+                      <a 
+                        href={'http://localhost:8000/'+viewContractDetails.agreement} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2"
+                      >
+                        <Eye className="h-4 w-4" />
+                        View
+                      </a>
+                    </Button>
                   </div>
                 </div>
               </div>
-              <DialogFooter className="flex flex-col sm:flex-row gap-2">
-                {viewContractDetails.conflicts ? (
-                  <>
-                    <Button variant="outline" className="sm:mr-auto">
-                      <Eye className="mr-2 h-4 w-4" />
-                      View Conflicts
-                    </Button>
-                    <Button variant="destructive">
-                      <X className="mr-2 h-4 w-4" />
-                      Reject Contract
-                    </Button>
-                    <Button>
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Approve Anyway
-                    </Button>
-                  </>
-                ) : (
-                  <Button className="sm:ml-auto" onClick={() => setViewContractDetails(null)}> 
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    Close
+
+              <div className="space-y-4 h-full">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium">Assigned Labourers</h3>
+                  <Badge variant="outline">{viewContractDetails.labourers?.length || 0} Total</Badge>
+                </div>
+                <div className="border rounded-lg divide-y max-h-[500px] overflow-y-auto">
+                  {viewContractDetails.labourers?.map((labourer: any) => (
+                    <div key={labourer._id} className="p-4 hover:bg-muted/50">
+                      <div className="flex items-start gap-4">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={labourer.profilePicture || '/placeholder.jpg'} alt={labourer.user?.name} />
+                          <AvatarFallback>{labourer.user?.name?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <p className="font-medium">{labourer.user?.name}</p>
+                            <Badge variant="outline" className={labourer.isActive ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}>
+                              {labourer.isActive ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            <p>Age: {labourer.Age} • Gender: {labourer.Gender}</p>
+                            <p>Verification: {labourer.verificationStatus}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="flex flex-col sm:flex-row gap-2">
+              {viewContractDetails.conflicts ? (
+                <>
+                  <Button variant="outline" className="sm:mr-auto">
+                    <Eye className="mr-2 h-4 w-4" />
+                    View Conflicts
                   </Button>
-                )}
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                  <Button variant="destructive">
+                    <X className="mr-2 h-4 w-4" />
+                    Reject Contract
+                  </Button>
+                  <Button>
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Approve Anyway
+                  </Button>
+                </>
+              ) : (
+                <Button className="sm:ml-auto" onClick={() => setViewContractDetails(null)}>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Close
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         )}
       </div>
     </DashboardLayout>

@@ -110,8 +110,7 @@ export function Sidebar({ className, role = "admin", ...props }: SidebarProps) {
             icon: <Clipboard className="h-5 w-5" />,
             submenu: [
               { title: "Active Contracts", href: "/mill-owner/contracts/active" },
-              { title: "Create Contract", href: "/mill-owner/contracts/create" },
-              { title: "History", href: "/mill-owner/contracts/history" },
+              { title: "Create Contract", href: "/mill-owner/contracts/create" }
             ],
           },
           {
