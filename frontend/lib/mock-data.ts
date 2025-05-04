@@ -74,6 +74,45 @@ export interface Contract {
   conflicts: boolean
 }
 
+// Vehicles
+export enum VehicleType {
+  TRUCK = "TRUCK",
+  TRACTOR = "TRACTOR",
+  HARVESTER = "HARVESTER",
+  OTHER = "OTHER",
+}
+
+export enum VehicleStatus {
+  PERMANENT = "PERMANENT",
+  RENTED = "RENTED",
+  AVAILABLE = "AVAILABLE",
+}
+
+export interface Vehicle {
+  _id: string
+  vehicleNumber: string
+  vehicleType: VehicleType
+  contractorId: string
+  status: VehicleStatus
+  currentRental?: {
+    mill?:{
+      name:string
+    }
+    millName: string
+    startDate: string
+    endDate: string
+    rentalRate: number
+  }
+  rentalHistory: Array<{
+    millId: string
+    millName: string
+    startDate: string
+    endDate: string
+    rentalRate: number
+  }>
+  createdAt: string
+}
+
 // Invoices
 export interface Invoice {
   id: string
@@ -350,6 +389,84 @@ export const mockLabourers: Labourer[] = [
     photoUrl: "/placeholder.svg?height=100&width=100",
     conflicts: false,
     createdAt: "2023-02-20",
+  },
+]
+
+export const mockVehicles: Vehicle[] = [
+  {
+    id: "1",
+    vehicleNumber: "MH12AB1234",
+    vehicleType: VehicleType.TRUCK,
+    rentalHistory: [],
+    contractorId: "1",
+    status: VehicleStatus.PERMANENT,
+    createdAt: "2023-01-15",
+  },
+  {
+    id: "2",
+    vehicleNumber: "MH14CD5678",
+    vehicleType: VehicleType.TRACTOR,
+    contractorId: "1",
+    status: VehicleStatus.RENTED,
+    currentRental: {
+      millId: "1",
+      millName: "Ganesh Sugar Mills",
+      startDate: "2024-03-01",
+      endDate: "2024-06-30",
+      rentalRate: 2500,
+    },
+    rentalHistory: [
+      {
+        millId: "2",
+        millName: "Krishna Sugar Factory",
+        startDate: "2023-11-01",
+        endDate: "2024-02-28",
+        rentalRate: 2200,
+      },
+    ],
+    createdAt: "2023-02-10",
+  },
+  {
+    id: "3",
+    vehicleNumber: "KA01EF9012",
+    vehicleType: VehicleType.HARVESTER,
+    contractorId: "1",
+    status: VehicleStatus.AVAILABLE,
+    rentalHistory: [
+      {
+        millId: "3",
+        millName: "Shree Renuka Sugars",
+        startDate: "2023-09-01",
+        endDate: "2023-12-31",
+        rentalRate: 3500,
+      },
+    ],
+    createdAt: "2023-01-05",
+  },
+  {
+    id: "4",
+    vehicleNumber: "UP32GH3456",
+    rentalHistory: [],
+    vehicleType: VehicleType.OTHER,
+    contractorId: "2",
+    status: VehicleStatus.PERMANENT,
+    createdAt: "2023-03-20",
+  },
+  {
+    id: "5",
+    vehicleNumber: "TN07IJ7890",
+    vehicleType: VehicleType.TRUCK,
+    contractorId: "3",
+    status: VehicleStatus.RENTED,
+    currentRental: {
+      millId: "5",
+      millName: "EID Parry Sugar",
+      startDate: "2024-02-15",
+      endDate: "2024-05-15",
+      rentalRate: 2800,
+    },
+    rentalHistory: [],
+    createdAt: "2023-02-25",
   },
 ]
 

@@ -2,7 +2,6 @@ import axiosClient from "./apiClient"
 import {apiEndpoints} from "./apiEndpoints"
 
 export const customerRequest = {
-
     sendRequest: (data: any) => axiosClient().post(apiEndpoints.customer, JSON.stringify(data)),
     getCustomerRequests: () => axiosClient().get(apiEndpoints.customer)
 }
@@ -13,6 +12,10 @@ export const ContractDetails = {
     getAllContract: (query?:any) => axiosClient().get(`${apiEndpoints.contract}?${query?query:''}`),
     UpdateContractDetils:(id: string,data: any) => axiosClient().put(`${apiEndpoints.contract}/${id}`,JSON.stringify(data)),
     getDashboardStatus:() => axiosClient().get(`${apiEndpoints.contract}/dashboard-stats`)
+}
+
+export const millOwnersApi = {
+    getAllMillOwners : () => axiosClient().get(`${apiEndpoints.millOwner}`)
 }
 
 
@@ -38,4 +41,13 @@ export const documents = {
 
 export const userDetails = {
     validateEmailAndContact: (data: any) => axiosClient().post(`${apiEndpoints.user}/validate`,data ),
+}
+
+export const vehiclesApi = {
+    createVehicle: (data: any) => axiosClient().post(apiEndpoints.vehicles, JSON.stringify(data)),
+    getAllVehicles: (query?: any) => axiosClient().get(`${apiEndpoints.vehicles}?${query ? query : ''}`),
+    assignPermanently: (id: string) => axiosClient().put(`${apiEndpoints.vehicles}/${id}/permanent`),
+    rentToMill: (id: string, data: any) => axiosClient().put(`${apiEndpoints.vehicles}/${id}/rent`, JSON.stringify(data)),
+    endRental: (id: string) => axiosClient().put(`${apiEndpoints.vehicles}/${id}/end-rental`),
+    getVehicleById: (id: string) => axiosClient().get(`${apiEndpoints.vehicles}/${id}`),
 }

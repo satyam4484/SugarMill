@@ -15,7 +15,6 @@ export interface IContractor extends Document {
     GST_NO: string;
     ownerName: string;
     ownerContactNo: string;
-    // Guarantor: IGuarantor[];  
     laboursCount:number;
 }
 

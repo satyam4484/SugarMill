@@ -25,7 +25,7 @@ export function DashboardLayout({
     <div className="flex min-h-screen flex-col">
       <Header />
       <div className="flex flex-1">
-        <Sidebar role={(userDetails as any).role} />
+        <Sidebar role={(userDetails as any)?.role} />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
       </div>
       <Toaster />

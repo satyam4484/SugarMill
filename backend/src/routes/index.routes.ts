@@ -7,6 +7,7 @@ import customerRoutes from './customer.routes.js'
 import documentRoutes from './document.routes.js';
 import userRoutes from './user.routes.js';
 import contractRouter from './contract.routes.js';
+import vechicleRoutes from './vehicle.routes.js'
 
 
 const router = Router();
@@ -19,5 +20,6 @@ router.use('/mill',millRoutes)
 router.use('/customers',customerRoutes)
 router.use('/documents',documentRoutes)
 router.use('/contracts',contractRouter)
+router.use('/vehicles',vechicleRoutes)
 
 export default router;

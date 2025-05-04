@@ -8,5 +8,7 @@ export const apiEndpoints = {
     document: 'documents',
     user:'users',
     contract:'contracts',
-    labourers:'labours'
+    labourers:'labours',
+    vehicles: 'vehicles',
+    millOwner:'mill'
 }

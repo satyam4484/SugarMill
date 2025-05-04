@@ -167,11 +167,11 @@ export function Sidebar({ className, role = "admin", ...props }: SidebarProps) {
           //   href: "/contractor/conflicts",
           //   icon: <AlertTriangle className="h-5 w-5" />,
           // },
-          // {
-          //   title: "Vehicles",
-          //   href: "/contractor/vehicles",
-          //   icon: <Truck className="h-5 w-5" />,
-          // },
+          {
+            title: "Vehicles",
+            href: "/contractor/vehicles",
+            icon: <Truck className="h-5 w-5" />,
+          },
           // {
           //   title: "Contracts History",
           //   href: "/contractor/history",

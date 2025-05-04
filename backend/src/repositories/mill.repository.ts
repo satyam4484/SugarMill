@@ -83,7 +83,7 @@ export const deleteMill = async (id: string): Promise<boolean> => {
 export const getAllMills = async (): Promise<IMill[]> => {
     try {
         logger.info('Fetching all mills from the database');
-        const mills = await Mill.find().populate('user').populate('documents');
+        const mills = await Mill.find().populate('user');
         logger.info(`Successfully fetched ${mills.length} mills`);
         return mills;
     } catch (error) {
