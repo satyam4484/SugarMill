@@ -3,35 +3,56 @@
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { mockContracts } from "@/lib/mock-data"
 import { formatCurrency, formatDate, getStatusColor } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { motion } from "framer-motion"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { AlertTriangle, CheckCircle, Eye, FileCheck, FileText, Search, X } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
-export default function AdminContractsPage() {
+import { ContractDetails } from "@/network/agent"
+import { HTTP_STATUS_CODE } from "@/lib/contants"
+import { useToast } from "@/hooks/use-toast"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import withAuth from "@/hocs/withAuth"
+function AdminContractsPage() {
+  const { toast } = useToast()
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [selectedContract, setSelectedContract] = useState<(typeof mockContracts)[0] | null>(null)
+  const [contracts, setContracts] = useState<any[]>([])
+  const [selectedContract, setSelectedContract] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  const getAllContractsHandler = async () => {
+    try {
+      setLoading(true)
+      const response = await ContractDetails.getAllContract()
+      if (response.status === HTTP_STATUS_CODE.OK) {
+        setContracts(response.data.data)
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch contracts",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    getAllContractsHandler()
+  }, [])
 
   // Filter contracts based on search term and status
-  const filteredContracts = mockContracts.filter((contract) => {
+  const filteredContracts = contracts.filter((contract) => {
     const matchesSearch =
-      contract.millOwnerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      contract.contractorName.toLowerCase().includes(searchTerm.toLowerCase())
+      contract.millOwner?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      contract.contractor?.user?.name?.toLowerCase().includes(searchTerm.toLowerCase())
 
     const matchesStatus = statusFilter === "all" || contract.status === statusFilter
 
@@ -40,6 +61,35 @@ export default function AdminContractsPage() {
 
   // Contracts with conflicts
   const conflictContracts = filteredContracts.filter((contract) => contract.conflicts)
+
+  const handleStatusChange = async (contractId: string, status: string) => {
+    try {
+      const response = await ContractDetails.UpdateContractDetils(contractId, { status })
+      if (response.status === HTTP_STATUS_CODE.OK) {
+        toast({
+          title: "Success",
+          description: `Contract ${status.toLowerCase()} successfully`,
+        })
+        getAllContractsHandler()
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `Failed to ${status.toLowerCase()} contract`,
+        variant: "destructive"
+      })
+    }
+  }
+
+  if (loading) {
+    return (
+      <DashboardLayout role="admin">
+        <div className="flex justify-center items-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   return (
     <DashboardLayout role="admin">
@@ -86,11 +136,10 @@ export default function AdminContractsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="rejected">Rejected</SelectItem>
-                    <SelectItem value="expired">Expired</SelectItem>
+                    <SelectItem value="ACTIVE">Active</SelectItem>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="COMPLETED">Completed</SelectItem>
+                    <SelectItem value="REJECTED">Rejected</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -112,47 +161,52 @@ export default function AdminContractsPage() {
                         <TableHead>Advance</TableHead>
                         <TableHead>Labourers</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Conflict</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredContracts.map((contract) => (
-                        <TableRow key={contract.id}>
-                          <TableCell>{contract.millOwnerName}</TableCell>
-                          <TableCell>{contract.contractorName}</TableCell>
+                        <TableRow key={contract._id}>
+                          <TableCell>{contract.millOwner?.name}</TableCell>
+                          <TableCell>{contract.contractor?.user?.name}</TableCell>
                           <TableCell>
-                            {formatDate(contract.startDate)} - {formatDate(contract.endDate)}
+                            {formatDate(new Date(contract.startDate).toISOString())} -{" "}
+                            {formatDate(new Date(contract.endDate).toISOString())}
                           </TableCell>
                           <TableCell>{formatCurrency(contract.advanceAmount)}</TableCell>
                           <TableCell>{contract.totalLabourers}</TableCell>
                           <TableCell>
                             <Badge className={getStatusColor(contract.status)}>{contract.status}</Badge>
                           </TableCell>
-                          <TableCell>
-                            {contract.conflicts ? (
-                              <Badge
-                                variant="outline"
-                                className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                              >
-                                <AlertTriangle className="mr-1 h-3 w-3" />
-                                Conflict
-                              </Badge>
-                            ) : (
-                              <Badge
-                                variant="outline"
-                                className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                              >
-                                <CheckCircle className="mr-1 h-3 w-3" />
-                                Verified
-                              </Badge>
-                            )}
-                          </TableCell>
                           <TableCell className="text-right">
-                            <Button variant="ghost" size="icon" onClick={() => setSelectedContract(contract)}>
-                              <Eye className="h-4 w-4" />
-                              <span className="sr-only">View</span>
-                            </Button>
+                            <div className="flex justify-end gap-2">
+                              <Button variant="ghost" size="icon" onClick={() => setSelectedContract(contract)}>
+                                <Eye className="h-4 w-4" />
+                                <span className="sr-only">View</span>
+                              </Button>
+                              {contract.status === "PENDING" && (
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-green-600 hover:text-green-700"
+                                    onClick={() => handleStatusChange(contract._id, "ACTIVE")}
+                                  >
+                                    <CheckCircle className="h-4 w-4" />
+                                    <span className="sr-only">Approve</span>
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-red-600 hover:text-red-700"
+                                    onClick={() => handleStatusChange(contract._id, "REJECTED")}
+                                  >
+                                    <X className="h-4 w-4" />
+                                    <span className="sr-only">Reject</span>
+                                  </Button>
+                                </>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -191,11 +245,11 @@ export default function AdminContractsPage() {
                       </TableHeader>
                       <TableBody>
                         {conflictContracts.map((contract) => (
-                          <TableRow key={contract.id}>
-                            <TableCell>{contract.millOwnerName}</TableCell>
-                            <TableCell>{contract.contractorName}</TableCell>
+                          <TableRow key={contract._id}>
+                            <TableCell>{contract.millOwner?.name}</TableCell>
+                            <TableCell>{contract.contractor?.user?.name}</TableCell>
                             <TableCell>
-                              {formatDate(contract.startDate)} - {formatDate(contract.endDate)}
+                              {formatDate(new Date(contract.startDate).toISOString())} - {formatDate(new Date(contract.endDate).toISOString())}
                             </TableCell>
                             <TableCell>{contract.totalLabourers}</TableCell>
                             <TableCell>
@@ -232,142 +286,193 @@ export default function AdminContractsPage() {
 
         {/* Contract Details Dialog */}
         {selectedContract && (
-          <Dialog open={!!selectedContract} onOpenChange={(open) => !open && setSelectedContract(null)}>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>Contract Details</DialogTitle>
-                <DialogDescription>
-                  Contract #{selectedContract.id} between {selectedContract.millOwnerName} and{" "}
-                  {selectedContract.contractorName}
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Contract Information</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Mill Owner:</span>
-                      <span className="font-medium">{selectedContract.millOwnerName}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Contractor:</span>
-                      <span className="font-medium">{selectedContract.contractorName}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Start Date:</span>
-                      <span className="font-medium">{formatDate(selectedContract.startDate)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">End Date:</span>
-                      <span className="font-medium">{formatDate(selectedContract.endDate)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Advance Amount:</span>
-                      <span className="font-medium">{formatCurrency(selectedContract.advanceAmount)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Total Labourers:</span>
-                      <span className="font-medium">{selectedContract.totalLabourers}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Status:</span>
-                      <Badge className={getStatusColor(selectedContract.status)}>{selectedContract.status}</Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Created On:</span>
-                      <span className="font-medium">{formatDate(selectedContract.createdAt)}</span>
-                    </div>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium mb-2">Verification Status</h3>
-                  {selectedContract.conflicts ? (
-                    <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
-                      <div className="flex items-center gap-2 mb-2">
-                        <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                        <h4 className="font-medium text-red-600 dark:text-red-400">Conflict Detected</h4>
-                      </div>
-                      <p className="text-sm text-red-600 dark:text-red-400 mb-4">
-                        This contract has potential conflicts that need to be resolved.
-                      </p>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Conflict Type:</span>
-                          <span className="font-medium">Labourer Overlap</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Affected Labourers:</span>
-                          <span className="font-medium">3</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Conflicting Contract:</span>
-                          <span className="font-medium">Contract #3</span>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
-                        <h4 className="font-medium text-green-600 dark:text-green-400">Verified</h4>
-                      </div>
-                      <p className="text-sm text-green-600 dark:text-green-400 mb-4">
-                        This contract has been verified and no conflicts were detected.
-                      </p>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span>Verified On:</span>
-                          <span className="font-medium">April 15, 2024</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span>Verified By:</span>
-                          <span className="font-medium">System</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+           <Dialog open={!!selectedContract} onOpenChange={(open) => !open && setSelectedContract(null)}>
+           <DialogContent className="max-w-7xl">
+             <DialogHeader>
+               <DialogTitle>Contract Details</DialogTitle>
+               <DialogDescription>
+                 Contract #{selectedContract._id} between {selectedContract.millOwner?.name} and{" "}
+                 {selectedContract.contractor?.user?.name}
+               </DialogDescription>
+             </DialogHeader>
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+               <div className="space-y-6">
+                 <div>
+                   <h3 className="text-lg font-medium mb-2">Contract Information</h3>
+                   <div className="space-y-2">
+                     <div className="flex justify-between">
+                       <span className="text-muted-foreground">Mill Owner:</span>
+                       <span className="font-medium">{selectedContract.millOwner?.name}</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span className="text-muted-foreground">Contractor:</span>
+                       <span className="font-medium">{selectedContract.contractor?.user?.name}</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span className="text-muted-foreground">Start Date:</span>
+                       <span className="font-medium">{formatDate(new Date(selectedContract.startDate).toISOString())}</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span className="text-muted-foreground">End Date:</span>
+                       <span className="font-medium">{formatDate(new Date(selectedContract.endDate).toISOString())}</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span className="text-muted-foreground">Advance Amount:</span>
+                       <span className="font-medium">{formatCurrency(selectedContract.advanceAmount)}</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span className="text-muted-foreground">Total Labourers:</span>
+                       <span className="font-medium">{selectedContract.totalLabourers}</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span className="text-muted-foreground">Status:</span>
+                       <Badge className={getStatusColor(selectedContract.status)}>{selectedContract.status}</Badge>
+                     </div>
+                     <div className="flex justify-between">
+                       <span className="text-muted-foreground">Created On:</span>
+                       <span className="font-medium">{formatDate(selectedContract.createdAt)}</span>
+                     </div>
+                   </div>
+                 </div>
 
-                  <div className="mt-4">
-                    <h3 className="text-lg font-medium mb-2">Contract Document</h3>
-                    <div className="border rounded-lg p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-blue-600" />
-                        <span>Contract_Agreement.pdf</span>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        View
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter className="flex flex-col sm:flex-row gap-2">
-                {selectedContract.conflicts ? (
-                  <>
-                    <Button variant="outline" className="sm:mr-auto">
-                      <Eye className="mr-2 h-4 w-4" />
-                      View Conflicts
-                    </Button>
-                    <Button variant="destructive">
-                      <X className="mr-2 h-4 w-4" />
-                      Reject Contract
-                    </Button>
-                    <Button>
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Approve Anyway
-                    </Button>
-                  </>
-                ) : (
-                  <Button className="sm:ml-auto">
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    Close
-                  </Button>
-                )}
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                 <div>
+                   <h3 className="text-lg font-medium mb-2">Verification Status</h3>
+                   {selectedContract.conflicts ? (
+                     <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
+                       <div className="flex items-center gap-2 mb-2">
+                         <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                         <h4 className="font-medium text-red-600 dark:text-red-400">Conflict Detected</h4>
+                       </div>
+                       <p className="text-sm text-red-600 dark:text-red-400 mb-4">
+                         This contract has potential conflicts that need to be resolved.
+                       </p>
+                       <div className="space-y-2">
+                         <div className="flex justify-between text-sm">
+                           <span>Conflict Type:</span>
+                           <span className="font-medium">Labourer Overlap</span>
+                         </div>
+                         <div className="flex justify-between text-sm">
+                           <span>Affected Labourers:</span>
+                           <span className="font-medium">3</span>
+                         </div>
+                         <div className="flex justify-between text-sm">
+                           <span>Conflicting Contract:</span>
+                           <span className="font-medium">Contract #3</span>
+                         </div>
+                       </div>
+                     </div>
+                   ) : (
+                     <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                       <div className="flex items-center gap-2 mb-2">
+                         <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                         <h4 className="font-medium text-green-600 dark:text-green-400">Verified</h4>
+                       </div>
+                       <p className="text-sm text-green-600 dark:text-green-400 mb-4">
+                         This contract has been verified and no conflicts were detected.
+                       </p>
+                       <div className="space-y-2">
+                         <div className="flex justify-between text-sm">
+                           <span>Verified On:</span>
+                           <span className="font-medium">{formatDate(new Date(selectedContract.createdAt).toISOString())}</span>
+                         </div>
+                         <div className="flex justify-between text-sm">
+                           <span>Verified By:</span>
+                           <span className="font-medium">System</span>
+                         </div>
+                       </div>
+                     </div>
+                   )}
+                   
+                 </div>
+
+                 <div>
+                   <h3 className="text-lg font-medium mb-2">Contract Document</h3>
+                   <div className="border rounded-lg p-4 flex items-center justify-between">
+                     <div className="flex items-center gap-2">
+                       <FileText className="h-5 w-5 text-blue-600" />
+                       <span>Contract_Agreement.pdf</span>
+                     </div>
+                     <Button 
+                       variant="outline" 
+                       size="sm"
+                       asChild
+                     >
+                       
+                       <a 
+                         href={'http://localhost:8000/'+selectedContract.agreement} 
+                         target="_blank" 
+                         rel="noopener noreferrer"
+                         className="flex items-center gap-2"
+                       >
+                         <Eye className="h-4 w-4" />
+                         View
+                       </a>
+                     </Button>
+                   </div>
+                 </div>
+               </div>
+
+               <div className="space-y-4 h-full">
+                 <div className="flex items-center justify-between">
+                   <h3 className="text-lg font-medium">Assigned Labourers</h3>
+                   <Badge variant="outline">{selectedContract.labourers?.length || 0} Total</Badge>
+                 </div>
+                 <div className="border rounded-lg divide-y max-h-[500px] overflow-y-auto">
+                   {selectedContract.labourers?.map((labourer: any) => (
+                     <div key={labourer._id} className="p-4 hover:bg-muted/50">
+                       <div className="flex items-start gap-4">
+                         <Avatar className="h-10 w-10">
+                           <AvatarImage src={labourer.profilePicture || '/placeholder.jpg'} alt={labourer.user?.name} />
+                           <AvatarFallback>{labourer.user?.name?.charAt(0)}</AvatarFallback>
+                         </Avatar>
+                         <div className="flex-1 space-y-1">
+                           <div className="flex items-center justify-between">
+                             <p className="font-medium">{labourer.user?.name}</p>
+                             <Badge variant="outline" className={labourer.isActive ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}>
+                               {labourer.isActive ? 'Active' : 'Inactive'}
+                             </Badge>
+                           </div>
+                           <div className="text-sm text-muted-foreground">
+                             <p>Age: {labourer.Age} • Gender: {labourer.Gender}</p>
+                             <p>Verification: {labourer.verificationStatus}</p>
+                           </div>
+                         </div>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               </div>
+             </div>
+
+             <DialogFooter className="flex flex-col sm:flex-row gap-2">
+               {selectedContract.conflicts ? (
+                 <>
+                   <Button variant="outline" className="sm:mr-auto">
+                     <Eye className="mr-2 h-4 w-4" />
+                     View Conflicts
+                   </Button>
+                   <Button variant="destructive">
+                     <X className="mr-2 h-4 w-4" />
+                     Reject Contract
+                   </Button>
+                   <Button>
+                     <CheckCircle className="mr-2 h-4 w-4" />
+                     Approve Anyway
+                   </Button>
+                 </>
+               ) : (
+                 <Button className="sm:ml-auto" onClick={() => setSelectedContract(null)}>
+                   <CheckCircle className="mr-2 h-4 w-4" />
+                   Close
+                 </Button>
+               )}
+             </DialogFooter>
+           </DialogContent>
+         </Dialog>
+          
         )}
       </div>
     </DashboardLayout>
   )
 }
+export default withAuth(AdminContractsPage);
