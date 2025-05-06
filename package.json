@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "test:coverage": "jest --coverage",
+    "sonar": "sonar-scanner"
+  }
+}
