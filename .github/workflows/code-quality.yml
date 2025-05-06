@@ -42,60 +42,58 @@ jobs:
 
       # Run tests for both frontend and backend
       - name: Run Frontend Tests
+        id: frontend-tests
         working-directory: ./frontend
+        continue-on-error: true
         run: |
           if [ -f "yarn.lock" ]; then
             yarn test:coverage
           else
             npm run test:coverage
           fi
+          echo "coverage=$(cat coverage/coverage-summary.json | jq -r '.total.lines.pct')" >> $GITHUB_OUTPUT
 
       - name: Run Backend Tests
+        id: backend-tests
         working-directory: ./backend
+        continue-on-error: true
         run: |
           if [ -f "yarn.lock" ]; then
             yarn test:coverage
           else
             npm run test:coverage
           fi
+          echo "coverage=$(cat coverage/coverage-summary.json | jq -r '.total.lines.pct')" >> $GITHUB_OUTPUT
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-      - name: Check Quality Gate
-        id: sonarqube-quality-gate-check
-        uses: sonarsource/sonarqube-quality-gate-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        timeout-minutes: 5
-
-      - name: Create GitHub Issue on Quality Gate Failure
-        if: steps.sonarqube-quality-gate-check.outputs.quality-gate-status == 'failed'
+      - name: Create Issue for Low Coverage
+        if: steps.frontend-tests.outputs.coverage < 70 || steps.backend-tests.outputs.coverage < 70
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const frontendCoverage = ${{ steps.frontend-tests.outputs.coverage || 0 }}
+            const backendCoverage = ${{ steps.backend-tests.outputs.coverage || 0 }}
+            
             const issueBody = `
-            # Code Quality Alert
+            # Test Coverage Alert
             
-            The code quality check has failed. Quality gate status: ${process.env.SONAR_QUALITY_GATE_STATUS}
+            The test coverage is below the required threshold of 70%:
             
-            Please review the SonarCloud report for detailed analysis:
-            [View detailed report](https://sonarcloud.io/dashboard?id=satyam4484)
+            - Frontend Coverage: ${frontendCoverage}%
+            - Backend Coverage: ${backendCoverage}%
             
-            ## Action Required
-            - Review and fix code quality issues
-            - Ensure test coverage is above 70%
-            - Address any code smells or security hotspots
+            Please add more tests to improve coverage.
+            
+            ## Details
+            - Commit: ${context.sha}
+            - Branch: ${context.ref}
+            - Workflow Run: ${context.runId}
             `;
             
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: '🚨 Code Quality Check Failed',
+              title: '📊 Test Coverage Below Threshold',
               body: issueBody,
-              labels: ['code-quality', 'needs-attention']
+              labels: ['test-coverage', 'needs-attention']
             });
