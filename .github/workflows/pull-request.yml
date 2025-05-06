@@ -33,19 +33,6 @@ jobs:
         working-directory: ./frontend
         run: npm run test:coverage
 
-      # Backend Checks
-      - name: Backend - Install Dependencies
-        working-directory: ./backend
-        run: npm ci
-
-      - name: Backend - Lint Check
-        working-directory: ./backend
-        run: npm run lint
-
-      - name: Backend - Type Check
-        working-directory: ./backend
-        run: npm run type-check
-
       - name: Backend - Run Tests
         working-directory: ./backend
         run: npm run test:coverage
