@@ -357,4 +357,58 @@ export default function AdminSettingsPage() {
                             Send notification for security alerts and breaches
                           </p>
                         </div>
-                        <Switch\
+                        <Switch id="security-alerts" defaultChecked />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-end">
+                  <Button onClick={handleSave} disabled={saving}>
+                    <Save className="mr-2 h-4 w-4" />
+                    {saving ? "Saving..." : "Save Changes"}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="appearance" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Appearance Settings</CardTitle>
+                  <CardDescription>Configure the appearance of the platform.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Add appearance settings content here */}
+                </CardContent>
+                <CardFooter className="flex justify-end">
+                  <Button onClick={handleSave} disabled={saving}>
+                    <Save className="mr-2 h-4 w-4" />
+                    {saving ? "Saving..." : "Save Changes"}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="advanced" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Advanced Settings</CardTitle>
+                  <CardDescription>Configure advanced platform settings.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Add advanced settings content here */}
+                </CardContent>
+                <CardFooter className="flex justify-end">
+                  <Button onClick={handleSave} disabled={saving}>
+                    <Save className="mr-2 h-4 w-4" />
+                    {saving ? "Saving..." : "Save Changes"}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </motion.div>
+      </div>
+    </DashboardLayout>
+  )
+}
