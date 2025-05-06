@@ -20,13 +20,44 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      # Install dependencies for both frontend and backend
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: |
+          if [ -f "yarn.lock" ]; then
+            yarn install --frozen-lockfile
+          else
+            npm ci
+          fi
 
-      - name: Run tests with coverage
-        run: npm run test:coverage
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: |
+          if [ -f "yarn.lock" ]; then
+            yarn install --frozen-lockfile
+          else
+            npm ci
+          fi
+
+      # Run tests for both frontend and backend
+      - name: Run Frontend Tests
+        working-directory: ./frontend
+        run: |
+          if [ -f "yarn.lock" ]; then
+            yarn test:coverage
+          else
+            npm run test:coverage
+          fi
+
+      - name: Run Backend Tests
+        working-directory: ./backend
+        run: |
+          if [ -f "yarn.lock" ]; then
+            yarn test:coverage
+          else
+            npm run test:coverage
+          fi
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
@@ -47,20 +78,18 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const qualityMetrics = JSON.parse(process.env.SONAR_METRICS || '{}');
             const issueBody = `
             # Code Quality Alert
             
-            The code quality check has failed. Here are the details:
+            The code quality check has failed. Quality gate status: ${process.env.SONAR_QUALITY_GATE_STATUS}
             
-            - Overall Code Quality: ${qualityMetrics.quality || 'N/A'}
-            - Code Coverage: ${qualityMetrics.coverage || 'N/A'}%
-            - Code Smells: ${qualityMetrics.codeSmells || 'N/A'}
-            - Technical Debt: ${qualityMetrics.techDebt || 'N/A'}
+            Please review the SonarCloud report for detailed analysis:
+            [View detailed report](https://sonarcloud.io/dashboard?id=satyam4484)
             
-            Please review and address these issues to maintain code quality standards.
-            
-            [View detailed report](https://sonarcloud.io/dashboard?id=${process.env.SONAR_PROJECT_KEY})
+            ## Action Required
+            - Review and fix code quality issues
+            - Ensure test coverage is above 70%
+            - Address any code smells or security hotspots
             `;
             
             await github.rest.issues.create({
