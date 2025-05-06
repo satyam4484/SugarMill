@@ -1,6 +1,14 @@
 module.exports = {
-  preset: 'ts-jest',
   testEnvironment: 'jsdom',
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
+  },
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+  testMatch: ['<rootDir>/tests/**/*.{spec,test}.{js,jsx,ts,tsx}'],
+  transform: {
+    '^.+\\.(ts|tsx)$': 'ts-jest'
+  },
   coverageThreshold: {
     global: {
       branches: 70,
@@ -8,17 +16,5 @@ module.exports = {
       lines: 70,
       statements: 70
     }
-  },
-  collectCoverageFrom: [
-    'app/**/*.{js,jsx,ts,tsx}',
-    '!app/**/*.d.ts',
-    '!app/**/*.test.{js,jsx,ts,tsx}',
-    '!app/**/*.spec.{js,jsx,ts,tsx}'
-  ],
-  testMatch: ['<rootDir>/tests/**/*.{spec,test}.{js,jsx,ts,tsx}'],
-  moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
-    '\\.(css|less|scss|sass)$': 'identity-obj-proxy'
-  },
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts']
+  }
 };
