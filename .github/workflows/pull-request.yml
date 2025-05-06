@@ -1,0 +1,64 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate:
+    name: Validate PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # Frontend Checks
+      - name: Frontend - Install Dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Frontend - Lint Check
+        working-directory: ./frontend
+        run: npm run lint
+
+      - name: Frontend - Type Check
+        working-directory: ./frontend
+        run: npm run type-check
+
+      - name: Frontend - Run Tests
+        working-directory: ./frontend
+        run: npm run test:coverage
+
+      # Backend Checks
+      - name: Backend - Install Dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Backend - Lint Check
+        working-directory: ./backend
+        run: npm run lint
+
+      - name: Backend - Type Check
+        working-directory: ./backend
+        run: npm run type-check
+
+      - name: Backend - Run Tests
+        working-directory: ./backend
+        run: npm run test:coverage
+
+      # Code Quality Check
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Quality Gate Check
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        timeout-minutes: 5

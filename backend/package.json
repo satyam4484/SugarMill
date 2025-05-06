@@ -12,7 +12,7 @@
     "build": "tsc",
     "lint": "eslint . --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage  --passWithNoTests --coverageThreshold={\"global\":{\"branches\":70,\"functions\":70,\"lines\":70,\"statements\":70}} "
   },
   "dependencies": {
     "bcrypt": "^5.1.1",
