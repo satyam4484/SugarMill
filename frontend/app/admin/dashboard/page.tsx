@@ -11,7 +11,7 @@ import { motion } from "framer-motion"
 import { Badge } from "@/components/ui/badge"
 import "chart.js/auto"
 import withAuth from "@/hocs/withAuth"
- function AdminDashboardPage() {
+function AdminDashboardPage() {
   // Sample data for charts
   const contractsData = {
     labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
@@ -368,4 +368,5 @@ import withAuth from "@/hocs/withAuth"
   )
 }
 
-export default withAuth(AdminDashboardPage);
+
+export default withAuth(AdminDashboardPage as React.ComponentType);
