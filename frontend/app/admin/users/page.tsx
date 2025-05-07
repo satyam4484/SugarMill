@@ -23,8 +23,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { motion } from "framer-motion"
 import { useState } from "react"
 import { Building, Plus, Search, Trash, UserCircle } from "lucide-react"
+import withAuth from "@/hocs/withAuth"
 
-export default function AdminUsersPage() {
+function AdminUsersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
 
@@ -345,3 +346,5 @@ export default function AdminUsersPage() {
     </DashboardLayout>
   )
 }
+
+export default withAuth(AdminUsersPage);

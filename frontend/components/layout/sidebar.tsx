@@ -305,7 +305,7 @@ export function Sidebar({ className, role = "admin", ...props }: SidebarProps) {
             ))}
           </div>
         </ScrollArea>
-        <div className="mt-auto p-4 border-t">
+        <div className="sticky bottom-0 w-full p-4 border-t bg-background">
           <Button variant="outline" className="w-full justify-start" asChild>
             <Link href="/">
               <PanelLeft className="mr-2 h-4 w-4" />

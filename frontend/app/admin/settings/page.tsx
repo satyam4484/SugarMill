@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import withAuth from "@/hocs/withAuth"
 
 export default function AdminSettingsPage() {
   const { toast } = useToast()
@@ -357,4 +358,150 @@ export default function AdminSettingsPage() {
                             Send notification for security alerts and breaches
                           </p>
                         </div>
-                        <Switch\
+                        <Switch id="security-alerts" defaultChecked />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-end">
+                  <Button onClick={handleSave} disabled={saving}>
+                    <Save className="mr-2 h-4 w-4" />
+                    {saving ? "Saving..." : "Save Changes"}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="appearance" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Appearance Settings</CardTitle>
+                  <CardDescription>Customize the look and feel of the platform.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">Theme Settings</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="dark-mode">Dark Mode</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Enable dark mode for better visibility in low light
+                          </p>
+                        </div>
+                        <Switch id="dark-mode" defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="high-contrast">High Contrast</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Increase contrast for better accessibility
+                          </p>
+                        </div>
+                        <Switch id="high-contrast" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">Layout Settings</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="compact-view">Compact View</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Enable compact view to show more content
+                          </p>
+                        </div>
+                        <Switch id="compact-view" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="animations">Animations</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Enable animations and transitions
+                          </p>
+                        </div>
+                        <Switch id="animations" defaultChecked />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-end">
+                  <Button onClick={handleSave} disabled={saving}>
+                    <Save className="mr-2 h-4 w-4" />
+                    {saving ? "Saving..." : "Save Changes"}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="advanced" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Advanced Settings</CardTitle>
+                  <CardDescription>Configure advanced platform settings.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">System Settings</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="maintenance-mode">Maintenance Mode</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Enable maintenance mode to restrict access
+                          </p>
+                        </div>
+                        <Switch id="maintenance-mode" />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="debug-mode">Debug Mode</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Enable debug mode for detailed logging
+                          </p>
+                        </div>
+                        <Switch id="debug-mode" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-medium">Data Management</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="auto-backup">Automatic Backup</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Enable automatic daily data backups
+                          </p>
+                        </div>
+                        <Switch id="auto-backup" defaultChecked />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label htmlFor="data-retention">Data Retention</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Keep data logs for 30 days
+                          </p>
+                        </div>
+                        <Switch id="data-retention" defaultChecked />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-end">
+                  <Button onClick={handleSave} disabled={saving}>
+                    <Save className="mr-2 h-4 w-4" />
+                    {saving ? "Saving..." : "Save Changes"}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </motion.div>
+      </div>
+    </DashboardLayout>
+  );
+}

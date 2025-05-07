@@ -3,7 +3,6 @@ import { Header } from "@/components/layout/header"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Toaster } from "@/components/ui/toaster"
 import { useGlobalContext } from "@/context/AuthContext"
-// import { useGlobalContext } from "@/context/AuthContext"
 
 interface DashboardLayoutProps {
   children: React.ReactNode

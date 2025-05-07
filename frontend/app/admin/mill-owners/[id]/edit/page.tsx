@@ -24,9 +24,8 @@ import {
 } from "@/components/ui/alert-dialog"
 import { toast } from "@/hooks/use-toast"
 import { Calendar } from "@/components/ui/calendar"
-import withAuth from "@/hocs/withAuth"
 
-function EditMillOwnerPage({ params }: { params: { id: string } }) {
+export default function EditMillOwnerPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [millOwner, setMillOwner] = useState<MillOwner | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -175,8 +174,8 @@ function EditMillOwnerPage({ params }: { params: { id: string } }) {
               <div className="space-y-2">
                 <Label htmlFor="subscriptionExpiry">Subscription Expiry</Label>
                 <Calendar
-                  selected=
-                  setDate={(date) => {
+                  selected={expiryDate}
+                  onSelect={(date: any) => {
                     setExpiryDate(date)
                     if (date) {
                       handleChange("subscriptionExpiry", date.toISOString().split("T")[0])
@@ -234,6 +233,3 @@ function EditMillOwnerPage({ params }: { params: { id: string } }) {
     </DashboardLayout>
   )
 }
-
-
-export default withAuth(EditMillOwnerPage as React.ComponentType);
