@@ -19,28 +19,28 @@ jobs:
       # Frontend Checks
       - name: Frontend - Install Dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Frontend - Lint Check
         working-directory: ./frontend
-        run: npm run lint
+        run: yarn lint
 
       - name: Frontend - Type Check
         working-directory: ./frontend
-        run: npm run type-check
+        run: yarn type-check
 
       - name: Frontend - Run Tests
         working-directory: ./frontend
-        run: npm run test:coverage
+        run: yarn test:coverage
 
       # Backend Checks
       - name: Backend - Install Dependencies
         working-directory: ./backend
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Backend - Run Tests
         working-directory: ./backend
-        run: npm run test:coverage
+        run: yarn test:coverage
 
       # Code Quality Check
       - name: SonarCloud Scan
