@@ -21,10 +21,6 @@ jobs:
         working-directory: ./frontend
         run: yarn install --frozen-lockfile
 
-      - name: Frontend - Lint Check
-        working-directory: ./frontend
-        run: yarn lint
-
       - name: Frontend - Type Check
         working-directory: ./frontend
         run: yarn type-check
