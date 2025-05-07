@@ -28,9 +28,7 @@ export const authenticateToken = async (req: any, res: Response, next: NextFunct
         if(user.role === UserRole.MILL_OWNER){
             req.mill = await Mill.findOne({user:user._id})
         }else if (user.role === UserRole.CONTRACTOR){
-            console.log("contractor")
             req.contractor = await Contractor.findOne({user:user._id})
-            console.log("contract---",req.contractor)
         }
         req.user = user;
         next();

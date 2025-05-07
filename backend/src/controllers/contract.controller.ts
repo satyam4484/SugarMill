@@ -14,7 +14,6 @@ export class ContractController {
             contractData.labourers = JSON.parse(contractData.labourers)
             contractData.Guarantor = JSON.parse(contractData.Guarantor)
             contractData.millOwner = (req as any).mill._id;
-            console.log("final format of data---",contractData)
             const response = await ContractRepository.createContract(contractData);
             if (response.isError) {
                 return res.status(400).json(response);
@@ -52,7 +51,6 @@ export class ContractController {
             if(query?.status) {
                 filter.status=query.status
             }
-            console.log("filter",filter)
             const response = await ContractRepository.getAllContracts(filter,query);
             if (response.isError) {
                 return res.status(400).json(response);

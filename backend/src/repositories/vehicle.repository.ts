@@ -106,7 +106,6 @@ export const getVehicleById = async (id: string): Promise<IVehicle | null> => {
                 path: 'currentRental',
                 populate:'mill',
             }).populate('rentalHistory.mill');
-        console.log(vehicle);
 
         if (!vehicle) {
             logger.warn(`Vehicle with ID: ${id} not found`);

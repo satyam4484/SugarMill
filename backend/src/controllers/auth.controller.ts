@@ -141,7 +141,6 @@ export class AuthController {
     
             // Generate JWT token
             const token = jwt.sign({ userId: user.userId }, appConfigs.JWT_SECRET,);
-            console.log("token--",token)
     
             logger.success(`User logged in successfully: ${userId}`);
             response.success = true;

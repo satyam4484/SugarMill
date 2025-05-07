@@ -32,16 +32,13 @@ export const createLabour = async (labourData: any): Promise<{userId: string, pa
             contactNo: labourData.contactNo,
             role: role
         });
-        console.log("created user", createdUser);
 
-        console.log("creating document object for labourer");
         const documentResponse: any = await createDocuments(labourData.documents);
         if(documentResponse.isError) {
             logger.error('Error creating documents for labourer:', documentResponse.message);
             throw new Error('Failed to create labourer');
         }
         createdDocument = documentResponse.data;
-        console.log("labour data---",labourData)
         const labourer = new Labourer({
             user: createdUser._id,
             documents: documentResponse.data,
@@ -173,7 +170,6 @@ export const updateLabourer = async (id: string, updateData: Partial<ILabourer>)
                     ...(updateData.documents as any).pancard
                 }
             }
-            console.log("doc--",docs);
             await Documents.findByIdAndUpdate(labourer.documents, docs);
         }
 

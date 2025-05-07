@@ -84,7 +84,6 @@ export class LabourerController {
                 }
             }
 
-            console.log("final data==",updateData);
             
             const labourer = await LabourRepository.updateLabourer(id, updateData);
             if (!labourer) {

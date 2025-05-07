@@ -39,7 +39,6 @@ export class ContractorController {
     static async getAll(req: Request, res: Response): Promise<Response> {
         try {
             const query = req.query;
-            console.log("query ---",query);
             const contractors = await ContractorRepository.getAllContractors(query);
             return res.status(200).json(contractors);
         } catch (error) {
@@ -79,7 +78,6 @@ export class ContractorController {
 
     static async getDashboardStats(req: any, res: Response): Promise<Response> {
         try {
-            console.log("req.contractor._id", req.contractor._id);
             const stats = await ContractorRepository.getContractorDashboardStats(req.contractor._id);
             return res.status(200).json({
                 success: true,
