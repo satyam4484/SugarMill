@@ -9,7 +9,6 @@ const withAuth = (WrappedComponent: React.ComponentType) => {
     const { login, isLoggedIn, userDetails } = useGlobalContext();
     const router = useRouter();
 
-    
     useEffect(() => {
       const user = JSON.parse(localStorage.getItem(AuthConstant.USER_DATA) || '{}');
       const token = localStorage.getItem(AuthConstant.TOKEN_KEY);
