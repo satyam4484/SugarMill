@@ -11,8 +11,39 @@ import { motion } from "framer-motion"
 import { Badge } from "@/components/ui/badge"
 import "chart.js/auto"
 import withAuth from "@/hocs/withAuth"
+import { millOwnersApi } from "@/network/agent"
+import { useEffect, useState } from "react"
+import { useToast } from "@/hooks/use-toast"
+import { HTTP_STATUS_CODE } from "@/lib/contants"
 
 function AdminDashboardPage() {
+  const { toast } = useToast()
+
+  const [millOwners,setMillOwners] = useState<any>([]);
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  const getAllMillOwnersHandler = async () => {
+    try {
+      setIsLoading(true);
+      const millResponse = await millOwnersApi.getAllMillOwners();
+      if(millResponse.status === HTTP_STATUS_CODE.OK) {
+        setMillOwners(millResponse.data);
+      }
+    } catch(error) {
+      toast({
+        title:'Failed to load mill owners',
+        variant:'destructive'
+      })
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+
+  useEffect(() => {
+    getAllMillOwnersHandler();
+  },[])
   // Sample data for charts
   const contractsData = {
     labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
@@ -149,26 +180,38 @@ function AdminDashboardPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {mockMillOwners.slice(0, 5).map((owner) => (
-                        <div key={owner.id} className="flex items-center">
+                      {isLoading ? (
+                        // Loading skeleton
+                        Array(5).fill(0).map((_, index) => (
+                          <div key={index} className="flex items-center animate-pulse">
+                            <div className="h-9 w-9 rounded-full bg-muted"></div>
+                            <div className="ml-4 space-y-2 flex-1">
+                              <div className="h-4 w-1/4 bg-muted rounded"></div>
+                              <div className="h-3 w-1/3 bg-muted rounded"></div>
+                            </div>
+                            <div className="ml-auto">
+                              <div className="h-6 w-16 bg-muted rounded"></div>
+                            </div>
+                          </div>
+                        ))
+                      ) : millOwners && millOwners.slice(0, 5).map((owner:any) => (
+                        <div key={owner._id} className="flex items-center">
                           <div className="flex items-center justify-center h-9 w-9 rounded-full bg-primary/10">
                             <Building className="h-5 w-5 text-primary" />
                           </div>
                           <div className="ml-4 space-y-1">
-                            <p className="text-sm font-medium leading-none">{owner.name}</p>
+                            <p className="text-sm font-medium leading-none">{owner.user.name}</p>
                             <p className="text-sm text-muted-foreground">{owner.location}</p>
                           </div>
                           <div className="ml-auto">
                             <Badge
                               variant={
-                                owner.subscriptionStatus === "active"
+                                owner.subscription.isActive
                                   ? "default"
-                                  : owner.subscriptionStatus === "pending"
-                                    ? "outline"
-                                    : "destructive"
+                                  : "destructive"
                               }
                             >
-                              {owner.subscriptionStatus}
+                              {owner.subscription.isActive ? "active" : "inactive"}
                             </Badge>
                           </div>
                         </div>

@@ -22,6 +22,7 @@ import { motion } from "framer-motion"
 import { useState } from "react"
 import { Plus, Search, Trash, UserCircle } from "lucide-react"
 import withAuth from "@/hocs/withAuth"
+
 function AdminContractorsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")

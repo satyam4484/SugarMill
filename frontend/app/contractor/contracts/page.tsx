@@ -31,8 +31,9 @@ function AdminContractsPage() {
   const { toast } = useToast()
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [selectedContract, setSelectedContract] = useState<any[]>([]);
-  const [viewContractDetails,setViewContractDetails] = useState<any>(null);
+  const [selectedContract, setSelectedContract] = useState<any[]>([])
+  const [viewContractDetails, setViewContractDetails] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   // Filter contracts based on search term and status
   const filteredContracts = selectedContract.filter((contract) => {
@@ -46,13 +47,18 @@ function AdminContractsPage() {
   })
   const getAllContractsHandler = async () => {
     try {
-      const response = await ContractDetails.getAllContract();
+      setIsLoading(true)
+      const response = await ContractDetails.getAllContract()
       if(response.status === HTTP_STATUS_CODE.OK){
-        console.log("response", response.data)
-        setSelectedContract(response.data.data);
+        setSelectedContract(response.data.data)
       }
     } catch (error) {
-      console.log("error", error)
+      toast({
+        title: 'Failed to load contracts',
+        variant: 'destructive'
+      })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -162,71 +168,118 @@ function AdminContractsPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredContracts.length > 0 && filteredContracts.map((contract: any) => (
-                        <TableRow key={contract._id}>
-                          <TableCell>{contract.millOwner?.name}</TableCell>
-                          <TableCell>{contract.contractor?.user?.name}</TableCell>
-                          <TableCell>
-                            {formatDate(new Date(contract.startDate).toISOString())} - {formatDate(new Date(contract.endDate).toISOString())}
-                          </TableCell>
-                          <TableCell>{formatCurrency(contract?.advanceAmount)}</TableCell>
-                          <TableCell>{contract.totalLabourers}</TableCell>
-                          <TableCell>
-                            <Badge className={getStatusColor(contract?.status)}>{contract?.status}</Badge>
-                          </TableCell>
-                          {/* <TableCell>
-                            {contract?.conflicts ? (
-                              <Badge
-                                variant="outline"
-                                className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-                              >
-                                <AlertTriangle className="mr-1 h-3 w-3" />
-                                Conflict
-                              </Badge>
-                            ) : (
-                              <Badge
-                                variant="outline"
-                                className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                              >
-                                <CheckCircle className="mr-1 h-3 w-3" />
-                                Verified
-                              </Badge>
-                            )}
-                          </TableCell> */}
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Button variant="ghost" size="icon" onClick={() => setViewContractDetails(contract)}>
-                                <Eye className="h-4 w-4" />
-                                <span className="sr-only">View</span>
-                              </Button>
-                              {contract.status === "PENDING" && (
-                                <>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="text-green-600 hover:text-green-700"
-                                    onClick={() => statusChangeHandler(contract._id, "ACTIVE")}
-                                  >
-                                    <CheckCircle className="h-4 w-4" />
-                                    <span className="sr-only">Accept</span>
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon"
-                                    className="text-red-600 hover:text-red-700"
-                                    onClick={() => statusChangeHandler(contract._id, "REJECTED")}
-                                  >
-                                    <X className="h-4 w-4" />
-                                    <span className="sr-only">Reject</span>
-                                  </Button>
-                                </>
+                      {isLoading ? (
+                        // Loading skeleton
+                        Array(5).fill(0).map((_, index) => (
+                          <TableRow key={index}>
+                            <TableCell>
+                              <div className="flex items-center gap-2 animate-pulse">
+                                <div className="h-9 w-9 rounded-full bg-muted"></div>
+                                <div className="space-y-2">
+                                  <div className="h-4 w-24 bg-muted rounded"></div>
+                                  <div className="h-3 w-32 bg-muted rounded"></div>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="h-4 w-32 bg-muted rounded animate-pulse"></div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="h-4 w-40 bg-muted rounded animate-pulse"></div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="h-4 w-20 bg-muted rounded animate-pulse"></div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="h-4 w-12 bg-muted rounded animate-pulse"></div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="h-6 w-16 bg-muted rounded animate-pulse"></div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
+                                <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : filteredContracts.length > 0 ? (
+                        filteredContracts.map((contract: any) => (
+                          <TableRow key={contract._id}>
+                            <TableCell>{contract.millOwner?.name}</TableCell>
+                            <TableCell>{contract.contractor?.user?.name}</TableCell>
+                            <TableCell>
+                              {formatDate(new Date(contract.startDate).toISOString())} - {formatDate(new Date(contract.endDate).toISOString())}
+                            </TableCell>
+                            <TableCell>{formatCurrency(contract?.advanceAmount)}</TableCell>
+                            <TableCell>{contract.totalLabourers}</TableCell>
+                            <TableCell>
+                              <Badge className={getStatusColor(contract?.status)}>{contract?.status}</Badge>
+                            </TableCell>
+                            {/* <TableCell>
+                              {contract?.conflicts ? (
+                                <Badge
+                                  variant="outline"
+                                  className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                                >
+                                  <AlertTriangle className="mr-1 h-3 w-3" />
+                                  Conflict
+                                </Badge>
+                              ) : (
+                                <Badge
+                                  variant="outline"
+                                  className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                                >
+                                  <CheckCircle className="mr-1 h-3 w-3" />
+                                  Verified
+                                </Badge>
                               )}
+                            </TableCell> */}
+                            <TableCell className="text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button variant="ghost" size="icon" onClick={() => setViewContractDetails(contract)}>
+                                  <Eye className="h-4 w-4" />
+                                  <span className="sr-only">View</span>
+                                </Button>
+                                {contract.status === "PENDING" && (
+                                  <>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="text-green-600 hover:text-green-700"
+                                      onClick={() => statusChangeHandler(contract._id, "ACTIVE")}
+                                    >
+                                      <CheckCircle className="h-4 w-4" />
+                                      <span className="sr-only">Accept</span>
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon"
+                                      className="text-red-600 hover:text-red-700"
+                                      onClick={() => statusChangeHandler(contract._id, "REJECTED")}
+                                    >
+                                      <X className="h-4 w-4" />
+                                      <span className="sr-only">Reject</span>
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-8">
+                            <div className="flex flex-col items-center justify-center text-muted-foreground">
+                              <FileText className="h-12 w-12 mb-2" />
+                              <p>No contracts found</p>
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
                 </CardContent>
               </Card>
             </TabsContent>

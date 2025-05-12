@@ -1,6 +1,5 @@
 import { labourers } from "./agent";
 
-
 export const apiEndpoints = {
     customer: 'customers',
     auth:'auth',
@@ -10,5 +9,9 @@ export const apiEndpoints = {
     contract:'contracts',
     labourers:'labours',
     vehicles: 'vehicles',
-    millOwner:'mill'
+    millOwner:'mill',
+    // Add new billing endpoints
+    plans: 'plans',
+    subscriptions: 'subscriptions',
+    invoices: 'invoices'
 }
