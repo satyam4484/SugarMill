@@ -34,8 +34,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import withAuth from "@/hocs/withAuth"
 
-export default function AdminBillingPage() {
+function AdminBillingPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
 
@@ -604,3 +605,5 @@ export default function AdminBillingPage() {
     </DashboardLayout>
   )
 }
+
+export default withAuth(AdminBillingPage);

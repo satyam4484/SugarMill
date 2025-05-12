@@ -140,6 +140,7 @@ function AdminContractsPage() {
                     <SelectItem value="all">All</SelectItem>
                     <SelectItem value="ACTIVE">Active</SelectItem>
                     <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="REJECTED">Rejected</SelectItem>
                     <SelectItem value="completed">Completed</SelectItem>
                     {/* <SelectItem value="expired">Expired</SelectItem> */}
                   </SelectContent>

@@ -52,3 +52,26 @@ export const vehiclesApi = {
     endRental: (id: string) => axiosClient().put(`${apiEndpoints.vehicles}/${id}/end-rental`),
     getVehicleById: (id: string) => axiosClient().get(`${apiEndpoints.vehicles}/${id}`),
 }
+
+export const plansApi = {
+    getAllPlans: () => axiosClient().get(apiEndpoints.plans),
+    createPlan: (data: any) => axiosClient().post(apiEndpoints.plans, JSON.stringify(data)),
+    updatePlan: (id: string, data: any) => axiosClient().put(`${apiEndpoints.plans}/${id}`, JSON.stringify(data)),
+    deletePlan: (id: string) => axiosClient().delete(`${apiEndpoints.plans}/${id}`)
+}
+
+export const subscriptionsApi = {
+    getAllSubscriptions: (query?: any) => axiosClient().get(`${apiEndpoints.subscriptions}?${query ? query : ''}`),
+    getSubscriptionById: (id: string) => axiosClient().get(`${apiEndpoints.subscriptions}/${id}`),
+    createSubscription: (data: any) => axiosClient().post(apiEndpoints.subscriptions, JSON.stringify(data)),
+    updateSubscription: (id: string, data: any) => axiosClient().put(`${apiEndpoints.subscriptions}/${id}`, JSON.stringify(data)),
+    cancelSubscription: (id: string) => axiosClient().put(`${apiEndpoints.subscriptions}/${id}/cancel`)
+}
+
+export const invoicesApi = {
+    getAllInvoices: (query?: any) => axiosClient().get(`${apiEndpoints.invoices}?${query ? query : ''}`),
+    getInvoiceById: (id: string) => axiosClient().get(`${apiEndpoints.invoices}/${id}`),
+    createInvoice: (data: any) => axiosClient().post(apiEndpoints.invoices, JSON.stringify(data)),
+    markAsPaid: (id: string, data: any) => axiosClient().put(`${apiEndpoints.invoices}/${id}/pay`, JSON.stringify(data)),
+    downloadInvoice: (id: string) => axiosClient().get(`${apiEndpoints.invoices}/${id}/download`, { responseType: 'blob' })
+}

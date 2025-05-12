@@ -8,6 +8,9 @@ import documentRoutes from './document.routes.js';
 import userRoutes from './user.routes.js';
 import contractRouter from './contract.routes.js';
 import vechicleRoutes from './vehicle.routes.js'
+import planRoutes from './plan.routes.js';
+import subsriptionRoutes from './subscription.routes.js'
+import invoiceRoutes from './invoice.routes.js';
 
 
 const router = Router();
@@ -21,5 +24,8 @@ router.use('/customers',customerRoutes)
 router.use('/documents',documentRoutes)
 router.use('/contracts',contractRouter)
 router.use('/vehicles',vechicleRoutes)
+router.use('/plans',planRoutes)
+router.use('/subsriptions',subsriptionRoutes)
+router.use('/invoices',invoiceRoutes)
 
 export default router;
