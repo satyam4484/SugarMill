@@ -1,7 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface Invoice extends Document {
-  invoiceNumber: string;
   millOwnerId: mongoose.Types.ObjectId;
   amount: number;
   status: 'paid' | 'unpaid' | 'overdue';
@@ -15,8 +14,7 @@ export interface Invoice extends Document {
 
 const invoiceSchema = new Schema<Invoice>(
   {
-    invoiceNumber: { type: String, required: true, unique: true },
-    millOwnerId: { type: Schema.Types.ObjectId, ref: 'MillOwner', required: true },
+    millOwnerId: { type: Schema.Types.ObjectId, ref: 'Mill', required: true },
     amount: { type: Number, required: true },
     status: { 
       type: String, 

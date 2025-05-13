@@ -72,6 +72,8 @@ export const invoicesApi = {
     getAllInvoices: (query?: any) => axiosClient().get(`${apiEndpoints.invoices}?${query ? query : ''}`),
     getInvoiceById: (id: string) => axiosClient().get(`${apiEndpoints.invoices}/${id}`),
     createInvoice: (data: any) => axiosClient().post(apiEndpoints.invoices, JSON.stringify(data)),
-    markAsPaid: (id: string, data: any) => axiosClient().put(`${apiEndpoints.invoices}/${id}/pay`, JSON.stringify(data)),
-    downloadInvoice: (id: string) => axiosClient().get(`${apiEndpoints.invoices}/${id}/download`, { responseType: 'blob' })
+    markAsPaid: (id: string, data: any) => axiosClient().put(`${apiEndpoints.invoices}/${id}/mark-paid`, JSON.stringify(data)),
+    downloadInvoice: (id: string) => axiosClient().get(`${apiEndpoints.invoices}/${id}/download`, { responseType: 'blob' }),
+    deleteInvoice: (id: string) => axiosClient().delete(`${apiEndpoints.invoices}/${id}`),
+    updateInvoice: (id: string, data: any) => axiosClient().put(`${apiEndpoints.invoices}/${id}`, JSON.stringify(data))
 }
